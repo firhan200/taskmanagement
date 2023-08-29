@@ -2,8 +2,10 @@ package data
 
 import (
 	"fmt"
+	"sync"
 	"time"
 
+	"github.com/firhan200/taskmanagement/utils"
 	"gorm.io/gorm"
 )
 
@@ -26,35 +28,28 @@ type Tasks struct {
 	NextCursor interface{}
 }
 
-func IsCondEqual(cond string, isEqual bool) string {
-	if isEqual {
-		return fmt.Sprintf("%s=", cond)
-	}
-
-	return fmt.Sprintf("%s", cond)
-}
-
-func FilterCondition(orderBy string, sort string, keyword string, isEqual bool) string {
-	var whereArgs string
-	if sort == "desc" {
-		whereArgs += fmt.Sprintf("%s %s ?", orderBy, IsCondEqual("<", isEqual))
-	} else {
-		whereArgs += fmt.Sprintf("%s %s ?", orderBy, IsCondEqual(">", isEqual))
-	}
-
-	//filter searching
-	whereArgs += fmt.Sprintf(" AND title LIKE ?")
-
-	return whereArgs
-}
-
-func SearchRule(keyword string) string {
-	return "%" + keyword + "%"
-}
-
 func (ts *Tasks) GetByUserId(uid uint) {
-	db := GetConnection()
+	ts.ValidateParams()
 
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		ts.QueryPagination(uid)
+		ts.GetNextCursor()
+	}()
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		ts.CountTotalData(uid)
+	}()
+
+	wg.Wait()
+}
+
+// set default value
+func (ts *Tasks) ValidateParams() {
 	if ts.OrderBy == "" {
 		ts.OrderBy = "created_at"
 	}
@@ -66,8 +61,12 @@ func (ts *Tasks) GetByUserId(uid uint) {
 	if ts.Limit == 0 {
 		ts.Limit = 10
 	}
+}
 
-	//only need where cursor if sort by asc and cursor is 0
+func (ts *Tasks) QueryPagination(uid uint) {
+	db := GetConnection()
+
+	// only need where cursor if sort by asc and cursor is 0
 	var whereArgs string
 	if ts.Cursor == "" {
 		whereArgs = ts.OrderBy + " is not null AND ?='' AND title LIKE ?"
@@ -79,12 +78,20 @@ func (ts *Tasks) GetByUserId(uid uint) {
 		Order(fmt.Sprintf("%s %s", ts.OrderBy, ts.Sort)).
 		Limit(ts.Limit).
 		Find(&ts.Data, whereArgs, ts.Cursor, SearchRule(ts.Search))
+}
 
-	//get total
+func (ts *Tasks) CountTotalData(uid uint) {
+	db := GetConnection()
+
+	// get total
 	var total int64
 	db.Find(&[]Task{}, "user_id = ? ", uid).
 		Count(&total)
 	ts.Total = int(total)
+}
+
+func (ts *Tasks) GetNextCursor() {
+	db := GetConnection()
 
 	//get last data
 	if len(ts.Data) < 1 {
@@ -105,7 +112,7 @@ func (ts *Tasks) GetByUserId(uid uint) {
 		nextTaskCursor = lastTask.DueDate
 	}
 
-	db.Order(fmt.Sprintf("%s,id %s", ts.OrderBy, ts.Sort)).
+	db.Order(fmt.Sprintf("%s %s", ts.OrderBy, ts.Sort)).
 		Limit(ts.Limit).
 		Find(&nextTask, FilterCondition(ts.OrderBy, ts.Sort, ts.Search, false), nextTaskCursor, SearchRule(ts.Search))
 	if nextTask.ID == 0 {
@@ -113,9 +120,9 @@ func (ts *Tasks) GetByUserId(uid uint) {
 	}
 
 	if ts.OrderBy == "created_at" {
-		ts.NextCursor = nextTask.CreatedAt
+		ts.NextCursor = utils.GetDefaultLayout(nextTask.CreatedAt)
 	} else if ts.OrderBy == "due_date" {
-		ts.NextCursor = nextTask.DueDate
+		ts.NextCursor = utils.GetDefaultLayout(nextTask.DueDate)
 	}
 }
 
@@ -182,4 +189,30 @@ func (t *Task) Delete() error {
 	db.Delete(&t)
 
 	return res.Error
+}
+
+func IsCondEqual(cond string, isEqual bool) string {
+	if isEqual {
+		return fmt.Sprintf("%s=", cond)
+	}
+
+	return fmt.Sprintf("%s", cond)
+}
+
+func FilterCondition(orderBy string, sort string, keyword string, isEqual bool) string {
+	var whereArgs string
+	if sort == "desc" {
+		whereArgs += fmt.Sprintf("%s %s ?", orderBy, IsCondEqual("<", isEqual))
+	} else {
+		whereArgs += fmt.Sprintf("%s %s ?", orderBy, IsCondEqual(">", isEqual))
+	}
+
+	//filter searching
+	whereArgs += fmt.Sprintf(" AND title LIKE ?")
+
+	return whereArgs
+}
+
+func SearchRule(keyword string) string {
+	return "%" + keyword + "%"
 }
