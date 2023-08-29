@@ -6,6 +6,7 @@ import (
 	"github.com/joho/godotenv"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 )
 
 var (
@@ -38,10 +39,12 @@ func GetConnection() *gorm.DB {
 
 	//dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=%s TimeZone=%s", host, user, pass, dbname, port, sslMode, timezone)
 	log.Print("Connecting to database...")
-	dsn := "root:@tcp(127.0.0.1:3306)/task_management_db?charset=utf8mb4&parseTime=True&loc=Local"
-	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
+	dsn := "dev:password@tcp(127.0.0.1:3306)/task_management_db?charset=utf8mb4&parseTime=True&loc=Local"
+	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{
+		Logger: logger.Default.LogMode(logger.Info),
+	})
 	if err != nil {
-		log.Panic("Connecting to database...")
+		log.Fatalf("Failed to connect: %s", err.Error())
 		panic("cannot connect to database")
 	}
 	log.Print("Database connected!")

@@ -16,4 +16,6 @@ func PrivateRoutes(app *gin.RouterGroup) {
 	tasks.GET("/", controllers.GetTasks)
 	tasks.POST("/", controllers.CreateTask)
 	tasks.GET("/:id", controllers.GetTaskById)
+	tasks.PATCH("/:id", controllers.UpdateTask)
+	tasks.DELETE("/:id", controllers.DeleteTask)
 }
