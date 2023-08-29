@@ -90,6 +90,7 @@ func (ts *Tasks) CountTotalData(uid uint) {
 	ts.Total = int(total)
 }
 
+// only call this function after get main query data
 func (ts *Tasks) GetNextCursor() {
 	db := GetConnection()
 
