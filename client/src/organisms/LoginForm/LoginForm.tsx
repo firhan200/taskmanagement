@@ -1,11 +1,12 @@
 import { useMutation } from "@tanstack/react-query";
+import { AxiosError } from "axios";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import Button from "src/atoms/Button/Button"
 import Loading from "src/atoms/Loading/Loading";
 import Typography from "src/atoms/Typography/Typography";
 import FormControl from "src/molecules/FormControl/FormControl"
-import { login } from "src/services/authService";
+import { login, LoginResponse } from "src/services/authService";
 
 export default function LoginForm() {
     const [emailAddress, setEmailAddress] = useState<string>('')
@@ -15,6 +16,13 @@ export default function LoginForm() {
         mutationKey: ['login'],
         mutationFn: () => {
             return login(emailAddress, password)
+        },
+        onSuccess: (data) => {
+            console.log("data")
+        },
+        onError: (err: AxiosError) => {
+            const res: LoginResponse = err.response?.data
+            console.log(err.response?.status)
         }
     })
 
