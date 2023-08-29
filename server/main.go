@@ -18,6 +18,7 @@ func main() {
 
 	//init public routes
 	routes.PublicRoutes(v)
+	routes.PrivateRoutes(v)
 
 	//run gin server
 	app.Run(":8000")

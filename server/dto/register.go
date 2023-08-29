@@ -1,6 +1,6 @@
 package dto
 
-type Register struct {
+type RegisterDto struct {
 	FullName     string
 	EmailAddress string
 	Password     string
