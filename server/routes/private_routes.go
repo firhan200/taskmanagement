@@ -10,7 +10,7 @@ func PrivateRoutes(app *fiber.App) {
 	tasks := app.Group("/tasks", middlewares.JwtAuthMiddleware)
 	tasks.Get("/", controllers.GetTasks)
 	tasks.Post("/", controllers.CreateTask)
-	// tasks.Get("/:id", controllers.GetTaskById)
-	// tasks.Patch("/:id", controllers.UpdateTask)
-	// tasks.Delete("/:id", controllers.DeleteTask)
+	tasks.Get("/:id", controllers.GetTaskById)
+	tasks.Patch("/:id", controllers.UpdateTask)
+	//tasks.Delete("/:id", controllers.DeleteTask)
 }

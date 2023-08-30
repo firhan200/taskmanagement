@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -8,7 +9,6 @@ import (
 	"github.com/firhan200/taskmanagement/data"
 	"github.com/firhan200/taskmanagement/dto"
 	"github.com/firhan200/taskmanagement/utils"
-	"github.com/gin-gonic/gin"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -20,7 +20,6 @@ func GetTasks(c *fiber.Ctx) error {
 		})
 		return err
 	}
-	fmt.Println(uid)
 
 	//get params
 	cursor := c.Query("cursor", "")
@@ -47,12 +46,32 @@ func GetTasks(c *fiber.Ctx) error {
 	return nil
 }
 
-func GetTaskById(c *gin.Context) {
-	id := c.Param("id")
+func GetTaskById(c *fiber.Ctx) error {
+	//get user id
+	uid, err := utils.ExtractTokenID(c)
+	if err != nil {
+		c.Status(http.StatusBadRequest).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+		return err
+	}
+
+	idParams := c.Params("id")
+	//parse
+	idInt, err := strconv.Atoi(idParams)
+	if err != nil {
+		c.Status(http.StatusBadRequest).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+		return err
+	}
+	id := uint(idInt)
+
+	task, err := data.GetTask(id, uid)
+
 	//get body parser
-	c.JSON(http.StatusOK, fiber.Map{
-		"id": id,
-	})
+	c.Status(http.StatusOK).JSON(task)
+	return nil
 }
 
 func CreateTask(c *fiber.Ctx) error {
@@ -105,13 +124,13 @@ func CreateTask(c *fiber.Ctx) error {
 	return nil
 }
 
-func UpdateTask(c *fiber.Ctx) {
+func UpdateTask(c *fiber.Ctx) error {
 	idParams := c.Params("id")
 	if idParams == "" {
 		c.Status(http.StatusBadRequest).JSON(fiber.Map{
 			"error": "Id not found",
 		})
-		return
+		return errors.New("id not found")
 	}
 
 	//parse
@@ -120,7 +139,7 @@ func UpdateTask(c *fiber.Ctx) {
 		c.Status(http.StatusBadRequest).JSON(fiber.Map{
 			"error": err.Error(),
 		})
-		return
+		return err
 	}
 	id := uint(idInt)
 
@@ -130,7 +149,7 @@ func UpdateTask(c *fiber.Ctx) {
 		c.Status(http.StatusBadRequest).JSON(fiber.Map{
 			"error": err.Error(),
 		})
-		return
+		return err
 	}
 	fmt.Print(uid)
 
@@ -140,7 +159,7 @@ func UpdateTask(c *fiber.Ctx) {
 		c.Status(http.StatusBadRequest).JSON(fiber.Map{
 			"error": err.Error(),
 		})
-		return
+		return err
 	}
 
 	//validate
@@ -148,7 +167,7 @@ func UpdateTask(c *fiber.Ctx) {
 		c.Status(http.StatusBadRequest).JSON(fiber.Map{
 			"error": "Title, Description or Due Date cannot be empty",
 		})
-		return
+		return errors.New("Title, Description or Due Date cannot be empty")
 	}
 
 	task, err := data.GetTask(id, uid)
@@ -156,7 +175,7 @@ func UpdateTask(c *fiber.Ctx) {
 		c.Status(http.StatusInternalServerError).JSON(fiber.Map{
 			"error": err.Error(),
 		})
-		return
+		return err
 	}
 
 	task.Title = updateTaskDto.Title
@@ -167,6 +186,7 @@ func UpdateTask(c *fiber.Ctx) {
 	c.Status(http.StatusOK).JSON(fiber.Map{
 		"task": task,
 	})
+	return nil
 }
 
 func DeleteTask(c *fiber.Ctx) {

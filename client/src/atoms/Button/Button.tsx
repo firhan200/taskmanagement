@@ -1,6 +1,6 @@
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
     size: "sm" | "md" | "lg"
-    colorType: "primary" | "secondary"
+    colorType: "primary" | "secondary" | "danger"
 }
 
 const Button: React.FC<ButtonProps> = ({ children, size, colorType, ...props })  => {
@@ -22,6 +22,9 @@ const Button: React.FC<ButtonProps> = ({ children, size, colorType, ...props }) 
         }
         else if(colorType == "secondary"){
             return "bg-base-200"
+        }
+        else if(colorType == "danger"){
+            return "bg-red-200 hover:bg-red-300 dark:hover:bg-red-700 dark:bg-red-800"
         }
     }
 

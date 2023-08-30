@@ -16,3 +16,15 @@ export const dateToString = (date: Date, time: string) => {
     date.setMinutes(parseInt(minute))
     return date.toISOString()
 }
+
+export const dateStringToDateAndTime = (date: string) => {
+    const momentObj = moment(date)
+
+    const dateValue = momentObj.toDate()
+    const timeValue = momentObj.format("HH:mm")
+
+    return {
+        dateValue,
+        timeValue
+    }
+}
