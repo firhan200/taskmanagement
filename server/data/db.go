@@ -6,7 +6,7 @@ import (
 	"os"
 
 	"github.com/joho/godotenv"
-	"gorm.io/driver/mysql"
+	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 )
@@ -36,13 +36,12 @@ func GetConnection() *gorm.DB {
 	pass := os.Getenv("DB_PASS")
 	dbname := os.Getenv("DB_NAME")
 	port := os.Getenv("DB_PORT")
-	// sslMode := os.Getenv("SSL_MODE")
-	// timezone := os.Getenv("DB_TIMEZONE")
+	timezone := os.Getenv("DB_TIMEZONE")
 
-	//dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=%s TimeZone=%s", host, user, pass, dbname, port, sslMode, timezone)
+	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s TimeZone=%s", host, user, pass, dbname, port, timezone)
 	log.Print("Connecting to database...")
-	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=True&loc=Local", user, pass, host, port, dbname)
-	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{
+	//dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=True&loc=Local", user, pass, host, port, dbname)
+	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
 		Logger: logger.Default.LogMode(logger.Info),
 	})
 	if err != nil {

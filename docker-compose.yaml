@@ -3,21 +3,21 @@ services:
   server:
     container_name: server
     build:
-     context: .
-     dockerfile: ./server/Dockerfile.server
-    command: 'go run main.go'
+      context: .
+      dockerfile: ./server/Dockerfile.server
+    command: 'go run main.go -b 0.0.0.0'
     volumes:
       - ./server:/app/www/server
     ports:
       - 8000:8000
     networks:
-      - taskmanagement-networks  
+      - taskmanagement-networks
 
   client:
     container_name: client
     build:
-     context: .
-     dockerfile: ./client/Dockerfile.client
+      context: .
+      dockerfile: ./client/Dockerfile.client
     command: 'npm run dev'
     volumes:
       - ./client:/app/www/client
@@ -28,24 +28,42 @@ services:
       - taskmanagement-networks
 
   taskmanagement_db:
-    image: mysql:5.7
+    image: postgres:15.4-alpine3.18
     container_name: taskmanagement_db
     networks:
       - taskmanagement-networks
     env_file:
       - ./server/.env
     environment:
-      MYSQL_DATABASE: ${DB_NAME}
-      MYSQL_ROOT_PASSWORD: ${DB_PASS}
-      MYSQL_ALLOW_EMPTY_PASSWORD: yes
-      MYSQL_PASSWORD: ${DB_PASS}
-      MYSQL_USER: ${DB_USER}
-      MYSQL_TCP_PORT: ${DB_PORT}
-      MYSQL_ROOT_HOST: "%"
-    ports: 
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASS}
+      - POSTGRES_DB=${DB_NAME}
+      - POSTGRES_PORT=${DB_PORT}
+      - DATABASE_HOST=${DB_HOST}
+      - PGPORT=${DB_PORT}
+    ports:
       - ${DB_PORT}:${DB_PORT}
     volumes:
-     - taskmanagement_volume:/var/lib/mysql
+      - taskmanagement_volume:/var/lib/mysql
+  # taskmanagement_db:
+  #   image: mysql:5.7
+  #   container_name: taskmanagement_db
+  #   networks:
+  #     - taskmanagement-networks
+  #   env_file:
+  #     - ./server/.env
+  #   environment:
+  #     MYSQL_DATABASE: ${DB_NAME}
+  #     MYSQL_ROOT_PASSWORD: ${DB_PASS}
+  #     MYSQL_ALLOW_EMPTY_PASSWORD: yes
+  #     MYSQL_PASSWORD: ${DB_PASS}
+  #     MYSQL_USER: ${DB_USER}
+  #     MYSQL_TCP_PORT: ${DB_PORT}
+  #     MYSQL_ROOT_HOST: "%"
+  #   ports: 
+  #     - ${DB_PORT}:${DB_PORT}
+  #   volumes:
+  #    - taskmanagement_volume:/var/lib/mysql
 
 networks:
   taskmanagement-networks:
