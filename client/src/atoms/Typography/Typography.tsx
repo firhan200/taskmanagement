@@ -18,8 +18,10 @@ const Typography: React.FC<TypographyProps> = ({ children, size, ...props })  =>
     if(props.className !== undefined){
         props.className! += " "+renderSize()
     }else{
-        props.className = renderSize()
+        props.className = renderSize() 
     }
+
+    props.className += " break-words"
 
     return (
         <div {...props}>

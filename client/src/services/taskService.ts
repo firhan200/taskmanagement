@@ -24,43 +24,32 @@ export type Task = {
     ID: number
     CreatedAt: string
     UpdatedAt: string
-    DeletedAt: any
+    DeletedAt: string
     UserId: number
     Title: string
     Description: string
     DueDate: string
 }
 
-export type TasksOrderBy = {
-    OrderBy: "created_at" | "due_date"
-}
-
 export type TasksSort = {
-    Sort: "asc" | "desc"
+    OrderBy: "created_at" | "due_date"
+    Sort: "desc" | "asc"
 }
 
 export const getTasks = async (
     cursor: string | null,
     limit: number,
-    orderBy: TasksOrderBy,
     sort: TasksSort,
     search: string | ""
 ): Promise<GetTasksResponse | null> => {
     try {
-        // const test = await axios.get(`${apiUrl}test`, {
-        //     headers: {
-        //         "Authorization": "Bearer "+token,
-                
-        //     }
-        // });
-
         const res = await axios.get(`${apiUrl}tasks`, {
             params: {
-                cursor: "",
+                cursor: cursor,
                 limit: limit,
-                orderBy: orderBy.OrderBy,
+                orderBy: sort.OrderBy,
                 sort: sort.Sort,
-                search: "",
+                search: search,
             },
             headers: {
                 "Authorization": "Bearer "+token,

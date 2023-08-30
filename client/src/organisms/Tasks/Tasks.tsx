@@ -1,17 +1,33 @@
-import { useInfiniteQuery } from "@tanstack/react-query";
-import React from "react";
+import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
+import React, { useEffect } from "react";
 import { useState } from "react";
 import Alert from "src/atoms/Alert/Alert";
+import Button from "src/atoms/Button/Button";
+import Loading from "src/atoms/Loading/Loading";
 import SkeletonLoading from "src/atoms/SkeletonLoading/SkeletonLoading";
 import Typography from "src/atoms/Typography/Typography";
+import useAuth from "src/hooks/useAuth";
 import TaskRow from "src/molecules/TaskRow/TaskRow";
-import { TasksOrderBy, TasksSort, getTasks } from "src/services/taskService";
+import { TasksSort, getTasks } from "src/services/taskService";
 
 export default function Tasks() {
+    const { token } = useAuth()
+    console.log(token)
     const limit = 2;
     const [keyword, setKeyword] = useState<string>('');
-    const [orderBy, setOrderBy] = useState<TasksOrderBy>({ OrderBy: "created_at" });
-    const [sort, setSort] = useState<TasksSort>({ Sort: "desc" });
+    const [sort, setSort] = useState<TasksSort>({ OrderBy: 'created_at', Sort: "desc" });
+
+    const ArrowUp = () => {
+        return (
+            <svg viewBox="0 0 24 24" width={20} fill="none" xmlns="http://www.w3.org/2000/svg"><g id="SVGRepo_bgCarrier" strokeWidth="0"></g><g id="SVGRepo_tracerCarrier" strokeLinecap="round" strokeLinejoin="round"></g><g id="SVGRepo_iconCarrier"> <path d="M7 3V21M7 3L11 7M7 3L3 7M14 3H21M14 9H19M14 15H17M14 21H15" stroke="#000000" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"></path> </g></svg>
+        )
+    }
+
+    const ArrowDown = () => {
+        return (
+            <svg viewBox="0 0 24 24" width={20} fill="none" xmlns="http://www.w3.org/2000/svg"><g id="SVGRepo_bgCarrier" strokeWidth="0"></g><g id="SVGRepo_tracerCarrier" strokeLinecap="round" strokeLinejoin="round"></g><g id="SVGRepo_iconCarrier"> <path d="M7 3V21M7 21L3 17M7 21L11 17M14 3H21M14 9H19M14 15H17M14 21H15" stroke="#000000" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"></path> </g></svg>
+        )
+    }
 
     const LoadingState = () => {
         return (
@@ -32,11 +48,14 @@ export default function Tasks() {
         )
     }
 
+    useEffect(() => {
+        remove()
+    }, [sort, keyword])
+
     const fetchTasks = async ({ pageParam = '' }) => {
         return await getTasks(
             pageParam,
             limit,
-            orderBy,
             sort,
             keyword
         )
@@ -51,10 +70,18 @@ export default function Tasks() {
         hasNextPage,
         isFetching,
         isFetchingNextPage,
+        remove
     } = useInfiniteQuery({
-        queryKey: ['tasks'],
+        queryKey: [`tasks-${token}`],
         queryFn: fetchTasks,
-        getNextPageParam: (lastPage) => lastPage?.NextCursor,
+        getNextPageParam: (lastPage) => {
+            if (lastPage == null) {
+                return
+            }
+            return lastPage.NextCursor
+        },
+        refetchOnWindowFocus: false,
+        cacheTime: 1
     })
 
     if (isLoading) {
@@ -71,27 +98,58 @@ export default function Tasks() {
 
     const solidDate = data!
 
+    const applyOrder = (orderBy: "created_at" | "due_date") => {
+        setSort({
+            OrderBy: orderBy,
+            Sort: sort.Sort == "asc" ? "desc" : "asc"
+        })
+    }
+
+    const RenderOrderBy = (title: string, orderBy: "created_at" | "due_date") => {
+        return (
+            <span onClick={() => applyOrder(orderBy)} className="cursor-pointer hover:underline flex gap-2">
+                {title}
+                {
+                    orderBy == sort.OrderBy ? (
+                        sort.Sort == "asc" ? <ArrowUp /> : <ArrowDown />
+                    ) : null
+                }
+
+            </span>
+        )
+    }
+
     return (
         <div>
-            <Typography size="md">Tasks</Typography>
+            <div className="hidden md:block my-8">
+                <div className="grid grid-cols-4">
+                    <Typography size="md" className="font-bold">Title</Typography>
+                    <Typography size="md" className="font-bold">Description</Typography>
+                    <Typography size="md" className="font-bold">{RenderOrderBy("Due Date", "due_date")}</Typography>
+                    <Typography size="md" className="font-bold flex justify-end">{RenderOrderBy("Created On", "created_at")}</Typography>
+                </div>
+            </div>
+
             {solidDate.pages.map((group, i) => (
-                <React.Fragment  key={i}>
+                <React.Fragment key={i}>
                     {group?.Data.map((task) => (
-                        <TaskRow key={task.ID} task={task}/>
+                        <TaskRow key={task.ID} task={task} />
                     ))}
                 </React.Fragment>
             ))}
-            <div>
-                <button
+            <div className="text-center">
+                <Button
+                    colorType="primary"
+                    size="md"
                     onClick={() => fetchNextPage()}
                     disabled={!hasNextPage || isFetchingNextPage}
                 >
                     {isFetchingNextPage
-                        ? 'Loading more...'
+                        ? <Loading />
                         : hasNextPage
                             ? 'Load More'
                             : 'Nothing more to load'}
-                </button>
+                </Button>
             </div>
             <div>{isFetching && !isFetchingNextPage ? 'Fetching...' : null}</div>
         </div>

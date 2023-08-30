@@ -10,8 +10,9 @@ export const formatDate = (dateString: string) => {
     return momentObj.fromNow()
 }
 
-export const dateToString = (date: string, time: string) => {
-    const dateObj = moment(date)
-
-    return dateObj.format("YYYY-MM-DDT")+time+":00+7.00"
+export const dateToString = (date: Date, time: string) => {
+    const [hour, minute] = time.split(':')
+    date.setHours(parseInt(hour))
+    date.setMinutes(parseInt(minute))
+    return date.toISOString()
 }

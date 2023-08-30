@@ -11,9 +11,9 @@ import FormControl from "src/molecules/FormControl/FormControl";
 import FormControlWrapper from "src/molecules/FormControlWrapper/FormControlWrapper";
 import { createTask } from "src/services/taskService";
 
-type ValuePiece = Date | null;
+export type ValuePiece = Date | null;
 
-type Value = ValuePiece | [ValuePiece, ValuePiece];
+export type Value = ValuePiece | [ValuePiece, ValuePiece];
 
 export default function AddTask() {
     const [isShow, setShow] = useState(false)
@@ -28,7 +28,11 @@ export default function AddTask() {
             return
         }
 
-        const dueDateResult = dateToString(date.toString(), time.toString())
+        if(time == null){
+            return
+        }
+
+        const dueDateResult = dateToString(date as Date, time.toString())
         setDueDate(dueDateResult)
     }, [date, time])
 
@@ -67,11 +71,12 @@ export default function AddTask() {
                     <FormControlWrapper title="Due Date">
                         <div className="grid grid-cols-2 gap-4">
                             <div>
-                                <DatePicker className="input input-bordered w-full" onChange={setDate} value={date} required={true}/>
+                                <DatePicker format="y-MM-dd" className="input input-bordered w-full" onChange={setDate} value={date} required={true}/>
                             </div>
                             <div>
                                 <TimePicker format="HH:mm" disableClock={true} className="input input-bordered w-full" onChange={setTime} value={time} required={true}/>
                             </div>
+                            { dueDate }
                         </div>
                     </FormControlWrapper>
                     <FormAreaControl disabled={isLoading} title="Description" value={description} onChange={e => setDescription(e.target.value)} required />
