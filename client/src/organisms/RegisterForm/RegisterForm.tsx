@@ -8,20 +8,21 @@ import Loading from "src/atoms/Loading/Loading";
 import Typography from "src/atoms/Typography/Typography";
 import useAuth from "src/hooks/useAuth";
 import FormControl from "src/molecules/FormControl/FormControl"
-import { login, LoginResponse } from "src/services/authService";
+import { RegisterResponse, register } from "src/services/authService";
 
-export default function LoginForm() {
+export default function RegisterForm() {
     const { authorize } = useAuth()
     const navigate = useNavigate()
 
+    const [fullName, setFullName] = useState<string>('Testing')
     const [emailAddress, setEmailAddress] = useState<string>('test@gmail.com')
     const [password, setPassword] = useState<string>('123456')
     const [error, setError] = useState<string>("")
 
     const { isLoading, mutate } = useMutation({
-        mutationKey: ['login'],
+        mutationKey: ['register'],
         mutationFn: () => {
-            return login(emailAddress, password)
+            return register(fullName, emailAddress, password)
         },
         onMutate: () => {
             setError("")
@@ -37,7 +38,7 @@ export default function LoginForm() {
             setError("Oopps something wrong");
         },
         onError: (err: AxiosError) => {
-            const res: LoginResponse = err.response?.data as LoginResponse
+            const res: RegisterResponse = err.response?.data as RegisterResponse
             setError(res.error ?? "")
         }
     })
@@ -55,11 +56,12 @@ export default function LoginForm() {
                     error !== "" ? <Alert type="error" text={error} /> : null
                 }
                 
+                <FormControl disabled={ isLoading } value={fullName} onChange={e => setFullName(e.target.value)} title="Full Name" type="text" placeholder="Full Name" required/>
                 <FormControl disabled={ isLoading } value={emailAddress} onChange={e => setEmailAddress(e.target.value)} title="Email" type="text" placeholder="Email Address" required/>
                 <FormControl disabled={ isLoading } value={password} onChange={e => setPassword(e.target.value)} title="Password" type="password" placeholder="Password" required/>
                 <div className="text-center my-4">
-                    <Link to="/register" className="label-text-alt link link-hover">
-                        <Typography size="md">Sign up now &gt;</Typography>
+                    <Link to="/login" className="label-text-alt link link-hover">
+                        <Typography size="md">Already have account? click to login</Typography>
                     </Link>
                 </div>
                 <Button disabled={ isLoading } colorType="primary" size="md">

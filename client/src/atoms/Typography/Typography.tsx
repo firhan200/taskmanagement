@@ -5,10 +5,10 @@ interface TypographyProps extends React.DOMAttributes<HTMLDivElement> {
 const Typography: React.FC<TypographyProps> = ({ children, size, ...props })  => {
     const renderSize = () => {
         if(size == "sm"){
-            return "text-md"
+            return "text-lg"
         }
         else if(size == "md"){
-            return "text-lg"
+            return "text-xl"
         }
         else if(size == "lg"){
             return "text-5xl font-bold"

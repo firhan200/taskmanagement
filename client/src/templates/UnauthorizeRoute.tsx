@@ -2,9 +2,11 @@ import { Suspense } from "react";
 import { Navigate, Outlet } from "react-router-dom";
 import Container from "src/atoms/Container/Container";
 import useAuth from "src/hooks/useAuth";
+import useTheme from "src/hooks/useTheme";
 
 const UnauthorizeRoute = () => {
 	const { isAuthorize } = useAuth();
+	const { theme } = useTheme();
 
 	if(isAuthorize){
 		return <Navigate to="/"/>
@@ -13,7 +15,7 @@ const UnauthorizeRoute = () => {
 	return (
 		<div style={{
 			minHeight: '100vh'
-		}} className="bg-base-200">
+		}}  data-theme={theme}>
 			<Container>
 				<Suspense>
 					<Outlet />
