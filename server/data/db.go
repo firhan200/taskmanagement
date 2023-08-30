@@ -1,7 +1,9 @@
 package data
 
 import (
+	"fmt"
 	"log"
+	"os"
 
 	"github.com/joho/godotenv"
 	"gorm.io/driver/mysql"
@@ -29,17 +31,17 @@ func GetConnection() *gorm.DB {
 		panic("Error loading .env file")
 	}
 
-	// host := os.Getenv("DB_HOST")
-	// user := os.Getenv("DB_USER")
-	// pass := os.Getenv("DB_PASS")
-	// dbname := os.Getenv("DB_NAME")
-	// port := os.Getenv("DB_PORT")
+	host := os.Getenv("DB_HOST")
+	user := os.Getenv("DB_USER")
+	pass := os.Getenv("DB_PASS")
+	dbname := os.Getenv("DB_NAME")
+	port := os.Getenv("DB_PORT")
 	// sslMode := os.Getenv("SSL_MODE")
 	// timezone := os.Getenv("DB_TIMEZONE")
 
 	//dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=%s TimeZone=%s", host, user, pass, dbname, port, sslMode, timezone)
 	log.Print("Connecting to database...")
-	dsn := "root:@tcp(127.0.0.1:3306)/task_management_db?charset=utf8mb4&parseTime=True&loc=Local"
+	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=True&loc=Local", user, pass, host, port, dbname)
 	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{
 		Logger: logger.Default.LogMode(logger.Info),
 	})

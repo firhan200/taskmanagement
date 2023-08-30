@@ -76,7 +76,6 @@ export default function AddTask() {
                             <div>
                                 <TimePicker format="HH:mm" disableClock={true} className="input input-bordered w-full" onChange={setTime} value={time} required={true}/>
                             </div>
-                            { dueDate }
                         </div>
                     </FormControlWrapper>
                     <FormAreaControl disabled={isLoading} title="Description" value={description} onChange={e => setDescription(e.target.value)} required />

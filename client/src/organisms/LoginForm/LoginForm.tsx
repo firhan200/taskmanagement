@@ -29,9 +29,6 @@ export default function LoginForm() {
         onSuccess: (data) => {
             if(typeof data.token !== 'undefined' && data.token !== ""){
                 authorize(data.token!)
-
-                //redirect to home
-                navigate("/")
             }
 
             setError("Oopps something wrong");

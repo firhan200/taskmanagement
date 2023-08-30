@@ -1,6 +1,8 @@
 package main
 
 import (
+	"os"
+
 	"github.com/firhan200/taskmanagement/data"
 	"github.com/firhan200/taskmanagement/routes"
 	"github.com/gofiber/fiber/v2"
@@ -13,10 +15,12 @@ func main() {
 
 	app := fiber.New()
 
+	origins := os.Getenv("ALLOWED_ORIGIN")
+
 	//setup cors
 	app.Use(cors.New(cors.Config{
-		AllowOrigins:     "https://localhost:5173, http://localhost:5173",
-		AllowHeaders:     "*",
+		AllowOrigins:     origins,
+		AllowHeaders:     "Authorization, Content-Type, Accept",
 		AllowCredentials: true,
 		AllowMethods:     "GET,POST,HEAD,PUT,DELETE,PATCH,OPTIONS",
 	}))

@@ -95,7 +95,6 @@ export default function Tasks() {
             return lastPage.NextCursor
         },
         refetchOnWindowFocus: false,
-        cacheTime: 1
     })
 
     if (isLoading) {

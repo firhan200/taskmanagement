@@ -3,9 +3,9 @@ import { getToken } from "src/hooks/useAuth";
 
 const apiUrl: string = import.meta.env.VITE_API_URL ?? "";
 
-const token = getToken();
-
 const addAuthorizationHeader = () => {
+  const token = getToken();
+
   return {
     Authorization: "Bearer " + token,
   };
@@ -52,7 +52,7 @@ export const getTasks = async (
       search: search,
     },
     headers: {
-      Authorization: "Bearer " + token,
+      ...addAuthorizationHeader()
     },
   });
 
@@ -135,8 +135,8 @@ export const updateTask = async (
 };
 
 type DeleteTaskResponse = {
-    error: string | undefined
-    task: Task | undefined
+  error: string | undefined
+  task: Task | undefined
 }
 
 export const deleteTask = async (id: number): Promise<DeleteTaskResponse> => {
