@@ -4,7 +4,8 @@ import { useState } from "react";
 import Alert from "src/atoms/Alert/Alert";
 import SkeletonLoading from "src/atoms/SkeletonLoading/SkeletonLoading";
 import Typography from "src/atoms/Typography/Typography";
-import { GetTasksResponse, TasksOrderBy, TasksSort, getTasks } from "src/services/taskService";
+import TaskRow from "src/molecules/TaskRow/TaskRow";
+import { TasksOrderBy, TasksSort, getTasks } from "src/services/taskService";
 
 export default function Tasks() {
     const limit = 2;
@@ -50,7 +51,6 @@ export default function Tasks() {
         hasNextPage,
         isFetching,
         isFetchingNextPage,
-        status,
     } = useInfiniteQuery({
         queryKey: ['tasks'],
         queryFn: fetchTasks,
@@ -75,9 +75,9 @@ export default function Tasks() {
         <div>
             <Typography size="md">Tasks</Typography>
             {solidDate.pages.map((group, i) => (
-                <React.Fragment key={i}>
+                <React.Fragment  key={i}>
                     {group?.Data.map((task) => (
-                        <p key={task.ID}>{task.Title}</p>
+                        <TaskRow key={task.ID} task={task}/>
                     ))}
                 </React.Fragment>
             ))}

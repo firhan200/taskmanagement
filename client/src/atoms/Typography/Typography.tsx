@@ -1,4 +1,4 @@
-interface TypographyProps extends React.DOMAttributes<HTMLDivElement> {
+interface TypographyProps extends React.HTMLAttributes<HTMLDivElement> {
     size: "sm" | "md" | "lg"
 }
 
@@ -15,8 +15,14 @@ const Typography: React.FC<TypographyProps> = ({ children, size, ...props })  =>
         }
     }
 
+    if(props.className !== undefined){
+        props.className! += " "+renderSize()
+    }else{
+        props.className = renderSize()
+    }
+
     return (
-        <div {...props} className={renderSize()}>
+        <div {...props}>
             { children }
         </div>
     )

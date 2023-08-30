@@ -1,3 +1,7 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+.react-date-picker__wrapper, .react-time-picker__wrapper{
+    border:0 !important;
+}
