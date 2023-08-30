@@ -1,27 +1,46 @@
 package main
 
 import (
-	"github.com/firhan200/taskmanagement/data"
-	"github.com/firhan200/taskmanagement/routes"
-	"github.com/gin-contrib/cors"
-	"github.com/gin-gonic/gin"
+	"github.com/firhan200/taskmanagement/controllers"
+	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/cors"
 )
 
+// func main() {
+// 	//auto migrate gorm
+// 	data.Migrate()
+
+// 	//create default for gin
+// 	app := gin.Default()
+
+// 	app.Use(cors.Default())
+// 	//grouping routes based on api version
+// 	v := app.Group("/v1/api")
+
+// 	//init public routes
+// 	routes.PrivateRoutes(v)
+// 	routes.PublicRoutes(v)
+
+// 	//run gin server
+// 	app.Run(":8000")
+// }
+
 func main() {
-	//auto migrate gorm
-	data.Migrate()
+	app := fiber.New()
 
-	//create default for gin
-	app := gin.Default()
+	// Or extend your config for customization
+	app.Use(cors.New(cors.Config{
+		AllowOrigins:     "https://localhost:5173, http://localhost:5173",
+		AllowHeaders:     "*",
+		AllowCredentials: true,
+		AllowMethods:     "GET,POST,HEAD,PUT,DELETE,PATCH,OPTIONS",
+	}))
 
-	app.Use(cors.Default())
-	//grouping routes based on api version
-	v := app.Group("/v1/api")
+	app.Get("/v1/api/test", controllers.GetTasks)
 
-	//init public routes
-	routes.PrivateRoutes(v)
-	routes.PublicRoutes(v)
+	app.Get("/v1/api/task", controllers.GetTasks)
 
-	//run gin server
-	app.Run(":8000")
+	//routes.PrivateRoutes(app)
+
+	app.Listen(":8000")
 }

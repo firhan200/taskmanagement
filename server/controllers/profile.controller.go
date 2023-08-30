@@ -3,12 +3,12 @@ package controllers
 import (
 	"net/http"
 
-	"github.com/gin-gonic/gin"
+	"github.com/gofiber/fiber/v2"
 )
 
-func GetProfiles(c *gin.Context) {
+func GetProfiles(c *fiber.Ctx) {
 	//get body parser
-	c.JSON(http.StatusOK, gin.H{
+	c.Status(http.StatusOK).JSON(fiber.Map{
 		"full_name": "Firhan",
 	})
 }

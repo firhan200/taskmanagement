@@ -47,16 +47,23 @@ export const getTasks = async (
     search: string | ""
 ): Promise<GetTasksResponse | null> => {
     try {
-        const res = await axios.get(`${apiUrl}tasks`, {
+        // const test = await axios.get(`${apiUrl}test`, {
+        //     headers: {
+        //         "Authorization": "Bearer "+token,
+                
+        //     }
+        // });
+
+        const res = await axios.get(`${apiUrl}task`, {
             params: {
-                cursor: cursor,
+                cursor: "",
                 limit: limit,
                 orderBy: orderBy.OrderBy,
                 sort: sort.Sort,
-                search: search,
+                search: "",
             },
             headers: {
-                ...addAuthorizationHeader()
+                "Authorization": "Bearer "+token,
             }
         });
 

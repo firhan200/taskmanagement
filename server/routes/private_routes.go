@@ -2,19 +2,16 @@ package routes
 
 import (
 	"github.com/firhan200/taskmanagement/controllers"
-	"github.com/gin-gonic/gin"
+	"github.com/gofiber/fiber/v2"
 )
 
-func PrivateRoutes(app *gin.RouterGroup) {
+func PrivateRoutes(app *fiber.App) {
 	//app.Use(middlewares.JwtAuthMiddleware)
 
-	profiles := app.Group("profiles")
-	profiles.GET("/", controllers.GetProfiles)
-
-	tasks := app.Group("tasks")
-	tasks.GET("/", controllers.GetTasks)
-	tasks.POST("/", controllers.CreateTask)
-	tasks.GET("/:id", controllers.GetTaskById)
-	tasks.PATCH("/:id", controllers.UpdateTask)
-	tasks.DELETE("/:id", controllers.DeleteTask)
+	tasks := app.Group("/v1/api/tasks")
+	tasks.Get("/", controllers.GetTasks)
+	// tasks.Post("/", controllers.CreateTask)
+	// tasks.Get("/:id", controllers.GetTaskById)
+	// tasks.Patch("/:id", controllers.UpdateTask)
+	// tasks.Delete("/:id", controllers.DeleteTask)
 }

@@ -5,13 +5,13 @@ import (
 
 	"github.com/firhan200/taskmanagement/utils"
 	"github.com/gin-gonic/gin"
+	"github.com/gofiber/fiber/v2"
 )
 
-func JwtAuthMiddleware(c *gin.Context) {
+func JwtAuthMiddleware(c *fiber.Ctx) {
 	err := utils.TokenValid(c)
 	if err != nil {
-		c.String(http.StatusUnauthorized, "Unauthorized")
-		c.Abort()
+		c.Status(http.StatusUnauthorized).JSON("Unauthorized")
 		return
 	}
 	c.Next()

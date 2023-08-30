@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
-	"github.com/gin-gonic/gin"
+	"github.com/gofiber/fiber/v2"
 )
 
 func GenerateToken(user_id uint) (string, error) {
@@ -21,7 +21,7 @@ func GenerateToken(user_id uint) (string, error) {
 	return token.SignedString([]byte(os.Getenv("SECRET_KEY")))
 }
 
-func TokenValid(c *gin.Context) error {
+func TokenValid(c *fiber.Ctx) error {
 	tokenString := ExtractToken(c)
 	_, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
@@ -36,15 +36,16 @@ func TokenValid(c *gin.Context) error {
 }
 
 /* this func will get token from header */
-func ExtractToken(c *gin.Context) string {
-	bearerToken := c.Request.Header.Get("Authorization")
+func ExtractToken(c *fiber.Ctx) string {
+	headers := c.GetReqHeaders()
+	bearerToken := headers["Authorization"]
 	if len(strings.Split(bearerToken, " ")) == 2 {
 		return strings.Split(bearerToken, " ")[1]
 	}
 	return ""
 }
 
-func ExtractTokenID(c *gin.Context) (uint, error) {
+func ExtractTokenID(c *fiber.Ctx) (uint, error) {
 	tokenString := ExtractToken(c)
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {

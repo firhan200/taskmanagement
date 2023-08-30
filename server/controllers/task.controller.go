@@ -9,23 +9,30 @@ import (
 	"github.com/firhan200/taskmanagement/dto"
 	"github.com/firhan200/taskmanagement/utils"
 	"github.com/gin-gonic/gin"
+	"github.com/gofiber/fiber/v2"
 )
 
-func GetTasks(c *gin.Context) {
+func GetTasks(c *fiber.Ctx) error {
+	c.Status(http.StatusOK).JSON(&data.Tasks{})
+	return nil
+
 	uid, err := utils.ExtractTokenID(c)
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{
+		c.Status(http.StatusUnauthorized).JSON(fiber.Map{
 			"error": err.Error(),
 		})
-		return
+		return err
 	}
 
 	//get params
-	cursor := c.DefaultQuery("cursor", "0")
-	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "10"))
-	orderBy := c.DefaultQuery("orderBy", "created_at")
-	sort := c.DefaultQuery("sort", "desc")
-	search := c.DefaultQuery("search", "")
+	cursor := c.Query("cursor", "0")
+	limit, _ := strconv.Atoi(c.Query("limit", "10"))
+	orderBy := c.Query("orderBy", "created_at")
+	sort := c.Query("sort", "desc")
+	search := c.Query("search", "")
+
+	c.Status(http.StatusOK).JSON(&data.Tasks{})
+	return nil
 
 	tasks := data.Tasks{
 		Cursor:  cursor,
@@ -37,22 +44,24 @@ func GetTasks(c *gin.Context) {
 	tasks.GetByUserId(uid)
 
 	//get body parser
-	c.JSON(http.StatusOK, tasks)
+	c.Status(http.StatusOK).JSON(tasks)
+
+	return nil
 }
 
 func GetTaskById(c *gin.Context) {
 	id := c.Param("id")
 	//get body parser
-	c.JSON(http.StatusOK, gin.H{
+	c.JSON(http.StatusOK, fiber.Map{
 		"id": id,
 	})
 }
 
-func CreateTask(c *gin.Context) {
+func CreateTask(c *fiber.Ctx) {
 	//get user id
 	uid, err := utils.ExtractTokenID(c)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
+		c.Status(http.StatusBadRequest).JSON(fiber.Map{
 			"error": err.Error(),
 		})
 		return
@@ -60,8 +69,8 @@ func CreateTask(c *gin.Context) {
 
 	//get body parser
 	createTaskDto := dto.CreateTaskDto{}
-	if err := c.ShouldBindJSON(&createTaskDto); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
+	if err := c.JSON(&createTaskDto); err != nil {
+		c.Status(http.StatusBadRequest).JSON(fiber.Map{
 			"error": err.Error(),
 		})
 		return
@@ -69,7 +78,7 @@ func CreateTask(c *gin.Context) {
 
 	//validate
 	if createTaskDto.Title == "" || createTaskDto.Description == "" {
-		c.JSON(http.StatusBadRequest, gin.H{
+		c.Status(http.StatusBadRequest).JSON(fiber.Map{
 			"error": "Title, Description or Due Date cannot be empty",
 		})
 		return
@@ -86,21 +95,21 @@ func CreateTask(c *gin.Context) {
 	//save and check if error
 	taskId, err := task.Save()
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
+		c.Status(http.StatusInternalServerError).JSON(fiber.Map{
 			"error": err.Error(),
 		})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
+	c.Status(http.StatusOK).JSON(fiber.Map{
 		"task_id": taskId,
 	})
 }
 
-func UpdateTask(c *gin.Context) {
-	idParams := c.Param("id")
+func UpdateTask(c *fiber.Ctx) {
+	idParams := c.Params("id")
 	if idParams == "" {
-		c.JSON(http.StatusBadRequest, gin.H{
+		c.Status(http.StatusBadRequest).JSON(fiber.Map{
 			"error": "Id not found",
 		})
 		return
@@ -109,7 +118,7 @@ func UpdateTask(c *gin.Context) {
 	//parse
 	idInt, err := strconv.Atoi(idParams)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
+		c.Status(http.StatusBadRequest).JSON(fiber.Map{
 			"error": err.Error(),
 		})
 		return
@@ -119,7 +128,7 @@ func UpdateTask(c *gin.Context) {
 	//get user id
 	uid, err := utils.ExtractTokenID(c)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
+		c.Status(http.StatusBadRequest).JSON(fiber.Map{
 			"error": err.Error(),
 		})
 		return
@@ -128,8 +137,8 @@ func UpdateTask(c *gin.Context) {
 
 	//get body parser
 	updateTaskDto := dto.UpdateTaskDto{}
-	if err := c.ShouldBindJSON(&updateTaskDto); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
+	if err := c.JSON(&updateTaskDto); err != nil {
+		c.Status(http.StatusBadRequest).JSON(fiber.Map{
 			"error": err.Error(),
 		})
 		return
@@ -137,7 +146,7 @@ func UpdateTask(c *gin.Context) {
 
 	//validate
 	if updateTaskDto.Title == "" || updateTaskDto.Description == "" {
-		c.JSON(http.StatusBadRequest, gin.H{
+		c.Status(http.StatusBadRequest).JSON(fiber.Map{
 			"error": "Title, Description or Due Date cannot be empty",
 		})
 		return
@@ -145,7 +154,7 @@ func UpdateTask(c *gin.Context) {
 
 	task, err := data.GetTask(id, uid)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
+		c.Status(http.StatusInternalServerError).JSON(fiber.Map{
 			"error": err.Error(),
 		})
 		return
@@ -156,15 +165,15 @@ func UpdateTask(c *gin.Context) {
 	task.DueDate = updateTaskDto.DueDate
 	task.Update()
 
-	c.JSON(http.StatusOK, gin.H{
+	c.Status(http.StatusOK).JSON(fiber.Map{
 		"task": task,
 	})
 }
 
-func DeleteTask(c *gin.Context) {
-	idParams := c.Param("id")
+func DeleteTask(c *fiber.Ctx) {
+	idParams := c.Params("id")
 	if idParams == "" {
-		c.JSON(http.StatusBadRequest, gin.H{
+		c.Status(http.StatusBadRequest).JSON(fiber.Map{
 			"error": "Id not found",
 		})
 		return
@@ -173,7 +182,7 @@ func DeleteTask(c *gin.Context) {
 	//parse
 	idInt, err := strconv.Atoi(idParams)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
+		c.Status(http.StatusBadRequest).JSON(fiber.Map{
 			"error": err.Error(),
 		})
 		return
@@ -183,7 +192,7 @@ func DeleteTask(c *gin.Context) {
 	//get user id
 	uid, err := utils.ExtractTokenID(c)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
+		c.Status(http.StatusBadRequest).JSON(fiber.Map{
 			"error": err.Error(),
 		})
 		return
@@ -192,7 +201,7 @@ func DeleteTask(c *gin.Context) {
 
 	task, err := data.GetTask(id, uid)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
+		c.Status(http.StatusInternalServerError).JSON(fiber.Map{
 			"error": err.Error(),
 		})
 		return
@@ -200,7 +209,7 @@ func DeleteTask(c *gin.Context) {
 
 	task.Delete()
 
-	c.JSON(http.StatusOK, gin.H{
+	c.Status(http.StatusOK).JSON(fiber.Map{
 		"task": task,
 	})
 }
