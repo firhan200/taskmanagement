@@ -13,9 +13,6 @@ import (
 )
 
 func GetTasks(c *fiber.Ctx) error {
-	c.Status(http.StatusOK).JSON(&data.Tasks{})
-	return nil
-
 	uid, err := utils.ExtractTokenID(c)
 	if err != nil {
 		c.Status(http.StatusUnauthorized).JSON(fiber.Map{
@@ -23,16 +20,17 @@ func GetTasks(c *fiber.Ctx) error {
 		})
 		return err
 	}
+	fmt.Println(uid)
 
 	//get params
-	cursor := c.Query("cursor", "0")
+	cursor := c.Query("cursor", "")
 	limit, _ := strconv.Atoi(c.Query("limit", "10"))
 	orderBy := c.Query("orderBy", "created_at")
 	sort := c.Query("sort", "desc")
 	search := c.Query("search", "")
 
-	c.Status(http.StatusOK).JSON(&data.Tasks{})
-	return nil
+	// c.Status(http.StatusOK).JSON(&data.Tasks{})
+	// return nil
 
 	tasks := data.Tasks{
 		Cursor:  cursor,
@@ -57,23 +55,23 @@ func GetTaskById(c *gin.Context) {
 	})
 }
 
-func CreateTask(c *fiber.Ctx) {
+func CreateTask(c *fiber.Ctx) error {
 	//get user id
 	uid, err := utils.ExtractTokenID(c)
 	if err != nil {
 		c.Status(http.StatusBadRequest).JSON(fiber.Map{
 			"error": err.Error(),
 		})
-		return
+		return nil
 	}
 
 	//get body parser
 	createTaskDto := dto.CreateTaskDto{}
-	if err := c.JSON(&createTaskDto); err != nil {
+	if err := c.BodyParser(&createTaskDto); err != nil {
 		c.Status(http.StatusBadRequest).JSON(fiber.Map{
 			"error": err.Error(),
 		})
-		return
+		return nil
 	}
 
 	//validate
@@ -81,7 +79,7 @@ func CreateTask(c *fiber.Ctx) {
 		c.Status(http.StatusBadRequest).JSON(fiber.Map{
 			"error": "Title, Description or Due Date cannot be empty",
 		})
-		return
+		return nil
 	}
 
 	//init new task instance
@@ -98,12 +96,13 @@ func CreateTask(c *fiber.Ctx) {
 		c.Status(http.StatusInternalServerError).JSON(fiber.Map{
 			"error": err.Error(),
 		})
-		return
+		return nil
 	}
 
 	c.Status(http.StatusOK).JSON(fiber.Map{
 		"task_id": taskId,
 	})
+	return nil
 }
 
 func UpdateTask(c *fiber.Ctx) {
@@ -137,7 +136,7 @@ func UpdateTask(c *fiber.Ctx) {
 
 	//get body parser
 	updateTaskDto := dto.UpdateTaskDto{}
-	if err := c.JSON(&updateTaskDto); err != nil {
+	if err := c.BodyParser(&updateTaskDto); err != nil {
 		c.Status(http.StatusBadRequest).JSON(fiber.Map{
 			"error": err.Error(),
 		})

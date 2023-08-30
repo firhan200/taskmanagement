@@ -54,7 +54,7 @@ export const getTasks = async (
         //     }
         // });
 
-        const res = await axios.get(`${apiUrl}task`, {
+        const res = await axios.get(`${apiUrl}tasks`, {
             params: {
                 cursor: "",
                 limit: limit,

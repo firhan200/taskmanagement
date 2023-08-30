@@ -2,11 +2,11 @@ package routes
 
 import (
 	"github.com/firhan200/taskmanagement/controllers"
-	"github.com/gin-gonic/gin"
+	"github.com/gofiber/fiber/v2"
 )
 
-func PublicRoutes(app *gin.RouterGroup) {
+func PublicRoutes(app *fiber.App) {
 	auth := app.Group("auth")
-	auth.POST("/login", controllers.Login)
-	auth.POST("/register", controllers.Register)
+	auth.Post("/login", controllers.Login)
+	auth.Post("/register", controllers.Register)
 }

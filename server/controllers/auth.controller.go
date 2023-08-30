@@ -6,25 +6,25 @@ import (
 	"github.com/firhan200/taskmanagement/data"
 	"github.com/firhan200/taskmanagement/dto"
 	"github.com/firhan200/taskmanagement/utils"
-	"github.com/gin-gonic/gin"
+	"github.com/gofiber/fiber/v2"
 )
 
-func Login(c *gin.Context) {
+func Login(c *fiber.Ctx) error {
 	//get body parser
 	loginDto := dto.LoginDto{}
-	if err := c.BindJSON(&loginDto); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
+	if err := c.BodyParser(&loginDto); err != nil {
+		c.Status(http.StatusBadRequest).JSON(fiber.Map{
 			"error": err.Error(),
 		})
-		return
+		return nil
 	}
 
 	//validate
 	if loginDto.EmailAddress == "" || loginDto.Password == "" {
-		c.JSON(http.StatusBadRequest, gin.H{
+		c.Status(http.StatusBadRequest).JSON(fiber.Map{
 			"error": "Email Address or Password cannot be empty",
 		})
-		return
+		return nil
 	}
 
 	//init new user instance
@@ -35,42 +35,42 @@ func Login(c *gin.Context) {
 
 	err := u.GetByEmailAddressAndPassword()
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
+		c.Status(http.StatusBadRequest).JSON(fiber.Map{
 			"error": err.Error(),
 		})
-		return
+		return nil
 	}
 
 	token, err := utils.GenerateToken(u.ID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
+		c.Status(http.StatusBadRequest).JSON(fiber.Map{
 			"error": err.Error(),
 		})
-		return
+		return nil
 	}
 
-	c.JSON(http.StatusOK, gin.H{
+	c.Status(http.StatusOK).JSON(fiber.Map{
 		"token": token,
 	})
-	return
+	return nil
 }
 
-func Register(c *gin.Context) {
+func Register(c *fiber.Ctx) error {
 	//get body parser
 	registerDto := dto.RegisterDto{}
-	if err := c.BindJSON(&registerDto); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
+	if err := c.BodyParser(&registerDto); err != nil {
+		c.Status(http.StatusBadRequest).JSON(fiber.Map{
 			"error": err.Error(),
 		})
-		return
+		return nil
 	}
 
 	//validate
 	if registerDto.FullName == "" || registerDto.EmailAddress == "" || registerDto.Password == "" {
-		c.JSON(http.StatusBadRequest, gin.H{
+		c.Status(http.StatusBadRequest).JSON(fiber.Map{
 			"error": "Full Name, Email Address or Password cannot be empty",
 		})
-		return
+		return nil
 	}
 
 	//init new user instance
@@ -83,22 +83,23 @@ func Register(c *gin.Context) {
 	//save and check if error
 	_, err := u.Save()
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
+		c.Status(http.StatusInternalServerError).JSON(fiber.Map{
 			"error": err.Error(),
 		})
-		return
+		return nil
 	}
 
 	token, err := utils.GenerateToken(u.ID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
+		c.Status(http.StatusInternalServerError).JSON(fiber.Map{
 			"error": err.Error(),
 		})
-		return
+		return nil
 	}
 
 	//get body parser
-	c.JSON(http.StatusOK, gin.H{
+	c.Status(http.StatusOK).JSON(fiber.Map{
 		"token": token,
 	})
+	return nil
 }

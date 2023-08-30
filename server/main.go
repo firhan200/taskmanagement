@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/firhan200/taskmanagement/controllers"
+	"github.com/firhan200/taskmanagement/routes"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 )
@@ -36,11 +36,8 @@ func main() {
 		AllowMethods:     "GET,POST,HEAD,PUT,DELETE,PATCH,OPTIONS",
 	}))
 
-	app.Get("/v1/api/test", controllers.GetTasks)
-
-	app.Get("/v1/api/task", controllers.GetTasks)
-
-	//routes.PrivateRoutes(app)
+	routes.PrivateRoutes(app)
+	routes.PublicRoutes(app)
 
 	app.Listen(":8000")
 }
