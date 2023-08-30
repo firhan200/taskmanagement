@@ -15,6 +15,7 @@ type Task struct {
 	Title       string
 	Description string
 	DueDate     time.Time
+	Status      string `gorm:"<-:false;-:migration"`
 }
 
 type Tasks struct {
@@ -216,4 +217,25 @@ func FilterCondition(orderBy string, sort string, keyword string, isEqual bool) 
 
 func SearchRule(keyword string) string {
 	return "%" + keyword + "%"
+}
+
+func (t *Task) AfterFind(tx *gorm.DB) (err error) {
+	if t.DueDate.IsZero() {
+		return
+	}
+
+	if t.DueDate.Before(time.Now()) {
+		t.Status = "Overdue"
+		return
+	}
+	if t.DueDate.Before(time.Now().AddDate(0, 0, 7)) && t.DueDate.After(time.Now()) {
+		t.Status = "Due soon"
+		return
+	}
+	if t.DueDate.After(time.Now()) {
+		t.Status = "Not urgent"
+		return
+	}
+
+	return
 }

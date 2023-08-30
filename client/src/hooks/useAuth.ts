@@ -13,7 +13,7 @@ type AuthStoreState = {
 	logout: () => void
 }
 
-const authStore = create<AuthStoreState>()((set) => ({
+export const authStore = create<AuthStoreState>()((set) => ({
     token: getToken(),
     isAuth: getToken() !== null,
     authorize: (token: string) => set(() => {

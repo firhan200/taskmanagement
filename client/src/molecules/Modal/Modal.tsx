@@ -1,20 +1,26 @@
+import Button from "src/atoms/Button/Button";
+import Typography from "src/atoms/Typography/Typography";
 import useModal from "src/hooks/useModal";
 
 export default function Modal() {
-    const { isShow } = useModal();
+    const { message, cb, hide } = useModal()
+
+    const btnActionClick = () => {
+        if(cb !== null){
+            cb()
+        }
+
+        hide()
+    }
 
     return (
-        <>
-            <input type="checkbox" checked={isShow} id="notification_modal" className="modal-toggle" />
-            <div className="modal">
-                <div className="modal-box">
-                    <h3 className="font-bold text-lg">Hello!</h3>
-                    <p className="py-4">This modal works with a hidden checkbox!</p>
-                    <div className="modal-action">
-                        <label htmlFor="notification_modal" className="btn">Close!</label>
-                    </div>
+        <dialog open={message !== null} className="modal">
+            <div className="modal-box">
+                <Typography size="md">{ message }</Typography>
+                <div className="modal-action">
+                    <Button colorType="primary" size="md" onClick={() => btnActionClick()}>OK</Button>
                 </div>
             </div>
-        </>
+        </dialog>
     );
 }

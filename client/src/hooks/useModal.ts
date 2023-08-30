@@ -1,23 +1,33 @@
 import { create } from "zustand"
 
 type ModalStoreState = {
-    isShow: boolean
-    show: (show: boolean) => void
+    message: string | null
+    cb: null | (() => void)
+    show: (message: string, cb: null | (() => void)) => void
+    hide: () => void
 }
 
-const modalStore = create<ModalStoreState>()((set) => ({
-    isShow: false,
-    show: (show: boolean) => set(() => {
+export const modalStore = create<ModalStoreState>()((set) => ({
+    message: null,
+    cb: null,
+    show: (message: string, cb: null | (() => void)) => set(() => {
         return {
-            isShow: show
+            message: message,
+            cb: cb
         }
-    })
+    }),
+    hide: () => set(() => ({
+        message: null,
+        cb: null
+    }))
 }))
 
 export default function useModal(){
-    const [ isShow, show ] = modalStore((state) => [state.isShow, state.show])
+    const [ message, cb, show, hide ] = modalStore((state) => [state.message, state.cb, state.show, state.hide])
     return {
-        isShow,
-        show
+        message,
+        cb,
+        show,
+        hide
     }
 }

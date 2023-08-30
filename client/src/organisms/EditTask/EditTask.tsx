@@ -10,7 +10,7 @@ import useTask from "src/hooks/useTask";
 import FormAreaControl from "src/molecules/FormAreaControl/FormAreaControl";
 import FormControl from "src/molecules/FormControl/FormControl";
 import FormControlWrapper from "src/molecules/FormControlWrapper/FormControlWrapper";
-import { getTaskById, updateTask } from "src/services/taskService";
+import { deleteTask, getTaskById, updateTask } from "src/services/taskService";
 
 export type ValuePiece = Date | null;
 
@@ -18,7 +18,7 @@ export type Value = ValuePiece | [ValuePiece, ValuePiece];
 
 export default function EditTask() {
     const { editId, edit } = useTask()
-    console.log(editId)
+    const queryClient = useQueryClient()
 
     const [title, setTitle] = useState<string>('');
     const [description, setDescription] = useState<string>('');
@@ -26,6 +26,24 @@ export default function EditTask() {
     const [time, setTime] = useState("10:00");
     const [dueDate, setDueDate] = useState<string>('');
     const [loadingData, setLoading] = useState(false);
+
+    const showDeleteTaskModal = async () => {
+        if(editId == null){
+            return;
+        }
+
+        const confirm = window.confirm(`Delete Task ${title}?`)
+        if(confirm){
+            const res = await deleteTask(editId!)
+            if(typeof res.error === "undefined"){
+                queryClient.invalidateQueries({
+                    queryKey: ['tasks']
+                })
+                //success
+                edit(null)
+            }
+        }
+    }
 
     const LoadingState = () => {
         return (
@@ -53,7 +71,7 @@ export default function EditTask() {
 
             //parse due date
             setTitle(res!.Title)
-            setDescription(res!.Title)
+            setDescription(res!.Description)
             setDate(dateValue)
             setTime(timeValue)
 
@@ -75,8 +93,6 @@ export default function EditTask() {
         const dueDateResult = dateToString(date as Date, time.toString())
         setDueDate(dueDateResult)
     }, [date, time])
-
-    const queryClient = useQueryClient()
 
     const { isLoading, mutate } = useMutation({
         mutationFn: async () => {
@@ -123,7 +139,7 @@ export default function EditTask() {
                     loadingData ? <LoadingState /> : (
                         <>
                             <Typography size="md">{ title }</Typography>
-                            <FormControl disabled={isLoading} title="Title" value={title} onChange={e => setTitle(e.target.value)} required />
+                            <FormControl disabled={isLoading} title="Name" value={title} onChange={e => setTitle(e.target.value)} required />
                             <FormControlWrapper title="Due Date">
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
@@ -141,7 +157,7 @@ export default function EditTask() {
                                     <Loading />
                                 ) : (
                                     <div className="modal-action">
-                                        <Button type="button" size="md" onClick={() => closeModal()} colorType="danger">Delete</Button>
+                                        <Button type="button" size="md" onClick={() => showDeleteTaskModal()} colorType="danger">Delete</Button>
                                         <Button size="md" type="submit" colorType="primary">Save</Button>
                                         <Button type="button" size="md" onClick={() => closeModal()} colorType="primary">Close</Button>
                                     </div>

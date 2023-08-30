@@ -1,13 +1,24 @@
 import moment from "moment";
 
+const stringToMoment = (dateString: string) => {
+    const momentObj = moment(dateString, "YYYY-MM-DDThh:mm:ssZ");
+    return momentObj
+}
+
 export const formatDate = (dateString: string) => {
     if(dateString === ""){
         return;
     }
 
-    const momentObj = moment(dateString, "YYYY-MM-DDThh:mm:ssZ");
+    const momentObj = stringToMoment(dateString);
 
     return momentObj.fromNow()
+}
+
+export const dateToReadableString = (dateString: string) => {
+    const momentObj = stringToMoment(dateString);
+
+    return momentObj.format("DD MMMM YYYY, HH:mm")
 }
 
 export const dateToString = (date: Date, time: string) => {

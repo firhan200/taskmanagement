@@ -3,6 +3,7 @@ import { Navigate, Outlet } from "react-router-dom";
 import Container from "src/atoms/Container/Container";
 import useAuth from "src/hooks/useAuth";
 import useTheme from "src/hooks/useTheme";
+import Modal from "src/molecules/Modal/Modal";
 import Footer from "src/organisms/Footer/Footer";
 import Header from "src/organisms/Header/Header";
 
@@ -19,6 +20,7 @@ const UnauthorizeRoute = () => {
 			minHeight: '100vh'
 		}} data-theme={theme}>
 			<Header />
+			<Modal />
 			<Container>
 				<Suspense>
 					<Outlet />

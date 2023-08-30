@@ -67,7 +67,7 @@ export default function AddTask() {
             <dialog open={isShow} id="my_modal_4" className="modal text-start">
                 <form onSubmit={add} method="dialog" className="modal-box w-11/12 max-w-5xl">
                     <Typography size="md">Create New Task</Typography>
-                    <FormControl disabled={isLoading} title="Title" value={title} onChange={e => setTitle(e.target.value)} required />
+                    <FormControl disabled={isLoading} title="Name" value={title} onChange={e => setTitle(e.target.value)} required />
                     <FormControlWrapper title="Due Date">
                         <div className="grid grid-cols-2 gap-4">
                             <div>

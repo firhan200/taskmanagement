@@ -1,34 +1,19 @@
 package main
 
 import (
+	"github.com/firhan200/taskmanagement/data"
 	"github.com/firhan200/taskmanagement/routes"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 )
 
-// func main() {
-// 	//auto migrate gorm
-// 	data.Migrate()
-
-// 	//create default for gin
-// 	app := gin.Default()
-
-// 	app.Use(cors.Default())
-// 	//grouping routes based on api version
-// 	v := app.Group("/v1/api")
-
-// 	//init public routes
-// 	routes.PrivateRoutes(v)
-// 	routes.PublicRoutes(v)
-
-// 	//run gin server
-// 	app.Run(":8000")
-// }
-
 func main() {
+	//auto migrate schema to db
+	data.Migrate()
+
 	app := fiber.New()
 
-	// Or extend your config for customization
+	//setup cors
 	app.Use(cors.New(cors.Config{
 		AllowOrigins:     "https://localhost:5173, http://localhost:5173",
 		AllowHeaders:     "*",

@@ -189,13 +189,13 @@ func UpdateTask(c *fiber.Ctx) error {
 	return nil
 }
 
-func DeleteTask(c *fiber.Ctx) {
+func DeleteTask(c *fiber.Ctx) error {
 	idParams := c.Params("id")
 	if idParams == "" {
 		c.Status(http.StatusBadRequest).JSON(fiber.Map{
 			"error": "Id not found",
 		})
-		return
+		return errors.New("Id not found")
 	}
 
 	//parse
@@ -204,7 +204,7 @@ func DeleteTask(c *fiber.Ctx) {
 		c.Status(http.StatusBadRequest).JSON(fiber.Map{
 			"error": err.Error(),
 		})
-		return
+		return err
 	}
 	id := uint(idInt)
 
@@ -214,7 +214,7 @@ func DeleteTask(c *fiber.Ctx) {
 		c.Status(http.StatusBadRequest).JSON(fiber.Map{
 			"error": err.Error(),
 		})
-		return
+		return err
 	}
 	fmt.Print(uid)
 
@@ -223,7 +223,7 @@ func DeleteTask(c *fiber.Ctx) {
 		c.Status(http.StatusInternalServerError).JSON(fiber.Map{
 			"error": err.Error(),
 		})
-		return
+		return err
 	}
 
 	task.Delete()
@@ -231,4 +231,5 @@ func DeleteTask(c *fiber.Ctx) {
 	c.Status(http.StatusOK).JSON(fiber.Map{
 		"task": task,
 	})
+	return nil
 }
