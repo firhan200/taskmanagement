@@ -6,6 +6,7 @@ import Button from "src/atoms/Button/Button";
 import Loading from "src/atoms/Loading/Loading";
 import Typography from "src/atoms/Typography/Typography";
 import { dateStringToDateAndTime, dateToString } from "src/helpers/date";
+import useModal from "src/hooks/useModal";
 import useTask from "src/hooks/useTask";
 import FormAreaControl from "src/molecules/FormAreaControl/FormAreaControl";
 import FormControl from "src/molecules/FormControl/FormControl";
@@ -18,6 +19,7 @@ export type Value = ValuePiece | [ValuePiece, ValuePiece];
 
 export default function EditTask() {
     const { editId, edit } = useTask()
+    const { show } = useModal()
     const queryClient = useQueryClient()
 
     const [title, setTitle] = useState<string>('');
@@ -41,6 +43,9 @@ export default function EditTask() {
                 })
                 //success
                 edit(null)
+
+                //show success modal
+                show("Delete success", null)
             }
         }
     }
@@ -106,10 +111,10 @@ export default function EditTask() {
                 queryKey: ['tasks']
             })
 
-            window.alert("success")
-
             resetForm()
             edit(null)
+            //show success modal
+            show("Edit success", null)
         }
     })
 

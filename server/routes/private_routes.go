@@ -13,4 +13,8 @@ func PrivateRoutes(app *fiber.App) {
 	tasks.Get("/:id", controllers.GetTaskById)
 	tasks.Patch("/:id", controllers.UpdateTask)
 	tasks.Delete("/:id", controllers.DeleteTask)
+
+	//faker only for test
+	faker := app.Group("/generate", middlewares.JwtAuthMiddleware)
+	faker.Get("/", controllers.GenerateRandomData)
 }

@@ -10,6 +10,7 @@ import ProtectedRoute from "src/templates/ProtectedRoute";
 
 //init every pages using lazy
 const dashboardPageLazy = lazy(() => import('src/pages/DashboardPage/DashboardPage'));
+const generatePageLazy = lazy(() => import('src/pages/GeneratePage/GeneratePage'));
 const loginPageLazy = lazy(() => import('src/pages/LoginPage/LoginPage'));
 const registerPageLazy = lazy(() => import('src/pages/RegisterPage/RegisterPage'));
 
@@ -34,6 +35,10 @@ const router = createBrowserRouter([
 			{
 				path: "/",
 				Component: dashboardPageLazy
+			},
+			{
+				path: "/generate",
+				Component: generatePageLazy
 			},
 		]
 	},

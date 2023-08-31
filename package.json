@@ -7,7 +7,8 @@
       "down": "docker compose --env-file ./server/.env  -f ./docker-compose.yaml down",
       "dev": "docker compose --env-file ./server/.env  -f ./docker-compose.yaml up",
       "dev-quite": "docker compose --env-file ./server/.env  -f ./docker-compose.yaml up -d",
-      "build": "docker compose --env-file ./server/.env  -f ./docker-compose.yaml build"
+      "build": "docker compose --env-file ./server/.env  -f ./docker-compose.yaml build",
+      "server-restart": "docker compose --env-file ./server/.env  -f ./docker-compose.yaml restart server"
     }
   }
   

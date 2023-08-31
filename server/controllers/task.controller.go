@@ -5,7 +5,10 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"sync"
+	"time"
 
+	"github.com/brianvoe/gofakeit/v6"
 	"github.com/firhan200/taskmanagement/data"
 	"github.com/firhan200/taskmanagement/dto"
 	"github.com/firhan200/taskmanagement/utils"
@@ -231,5 +234,58 @@ func DeleteTask(c *fiber.Ctx) error {
 	c.Status(http.StatusOK).JSON(fiber.Map{
 		"task": task,
 	})
+	return nil
+}
+
+func GenerateRandomData(c *fiber.Ctx) error {
+	//get user id
+	uid, err := utils.ExtractTokenID(c)
+	if err != nil {
+		c.Status(http.StatusBadRequest).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+		return nil
+	}
+
+	tasks := []*data.Task{}
+	taskchan := make(chan *data.Task)
+
+	go func() {
+		wg := sync.WaitGroup{}
+
+		for i := 0; i < 10; i++ {
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+
+				task := &data.Task{
+					UserId:      uid,
+					Title:       gofakeit.Sentence(gofakeit.IntRange(5, 10)),
+					Description: gofakeit.Sentence(gofakeit.IntRange(10, 50)),
+					DueDate:     gofakeit.DateRange(time.Now().AddDate(0, 0, -5), time.Now().AddDate(0, 0, 7)),
+				}
+
+				_, err := task.Save()
+				if err != nil {
+					return
+				}
+
+				taskchan <- task
+			}()
+		}
+
+		fmt.Println("waiting")
+		wg.Wait()
+		close(taskchan)
+
+		fmt.Println("finish wait")
+	}()
+
+	for tc := range taskchan {
+		tasks = append(tasks, tc)
+	}
+
+	c.Status(http.StatusOK).JSON(&tasks)
+
 	return nil
 }

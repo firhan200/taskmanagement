@@ -109,9 +109,9 @@ func (ts *Tasks) GetNextCursor() {
 		nextTaskCursor interface{}
 	)
 	if ts.OrderBy == "created_at" {
-		nextTaskCursor = lastTask.CreatedAt
+		nextTaskCursor = lastTask.CreatedAt.UTC()
 	} else if ts.OrderBy == "due_date" {
-		nextTaskCursor = lastTask.DueDate
+		nextTaskCursor = lastTask.DueDate.UTC()
 	}
 
 	db.Order(fmt.Sprintf("%s %s", ts.OrderBy, ts.Sort)).
@@ -122,9 +122,9 @@ func (ts *Tasks) GetNextCursor() {
 	}
 
 	if ts.OrderBy == "created_at" {
-		ts.NextCursor = utils.GetDefaultLayout(nextTask.CreatedAt)
+		ts.NextCursor = utils.GetDefaultLayout(nextTask.CreatedAt.UTC())
 	} else if ts.OrderBy == "due_date" {
-		ts.NextCursor = utils.GetDefaultLayout(nextTask.DueDate)
+		ts.NextCursor = utils.GetDefaultLayout(nextTask.DueDate.UTC())
 	}
 }
 
@@ -220,21 +220,15 @@ func SearchRule(keyword string) string {
 }
 
 func (t *Task) AfterFind(tx *gorm.DB) (err error) {
-	if t.DueDate.IsZero() {
-		return
-	}
-
-	if t.DueDate.Before(time.Now()) {
-		t.Status = "Overdue"
-		return
-	}
-	if t.DueDate.Before(time.Now().AddDate(0, 0, 7)) && t.DueDate.After(time.Now()) {
-		t.Status = "Due soon"
-		return
-	}
-	if t.DueDate.After(time.Now()) {
-		t.Status = "Not urgent"
-		return
+	//fic status
+	if !t.DueDate.IsZero() {
+		if t.DueDate.Before(time.Now()) {
+			t.Status = "Overdue"
+		} else if t.DueDate.Before(time.Now().AddDate(0, 0, 7)) && t.DueDate.After(time.Now()) {
+			t.Status = "Due soon"
+		} else if t.DueDate.After(time.Now()) {
+			t.Status = "Not urgent"
+		}
 	}
 
 	return
