@@ -19,7 +19,7 @@ export default function Tasks() {
     const { logout } = useAuth()
     const { theme } = useTheme()
     const { sort, keyword, sorting } = useTask()
-    const limit = 2;
+    const limit = 10;
 
     const ArrowUp = () => {
         return (
@@ -136,9 +136,9 @@ export default function Tasks() {
         <div>
             <FilterTaskMobile />
             <div className="hidden md:block my-8">
-                <div className="grid md:grid-cols-5 lg:grid-cols-6">
+                <div className="grid md:grid-cols-5 lg:grid-cols-6 gap-4">
                     <div></div>
-                    <div className="grid grid-cols-1 lg:grid-cols-2 md:col-span-2 lg:col-span-3">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 md:col-span-2 lg:col-span-3 gap-4">
                         <Typography size="md" className="font-bold">Name</Typography>
                         <Typography size="md" className="font-bold">Description</Typography>
                     </div>

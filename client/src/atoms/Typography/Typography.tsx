@@ -1,8 +1,9 @@
 interface TypographyProps extends React.HTMLAttributes<HTMLDivElement> {
     size: "sm" | "md" | "lg"
+    truncate?: undefined | boolean
 }
 
-const Typography: React.FC<TypographyProps> = ({ children, size, ...props })  => {
+const Typography: React.FC<TypographyProps> = ({ children, truncate, size, ...props })  => {
     const renderSize = () => {
         if(size == "sm"){
             return "text-lg"
@@ -19,6 +20,10 @@ const Typography: React.FC<TypographyProps> = ({ children, size, ...props })  =>
         props.className! += " "+renderSize()
     }else{
         props.className = renderSize() 
+    }
+
+    if(typeof truncate !== 'undefined' && truncate){
+        props.className += " truncate"
     }
 
     props.className += " break-words"
