@@ -5,17 +5,19 @@ import (
 	"sync"
 	"time"
 
-	"github.com/firhan200/taskmanagement/utils"
 	"gorm.io/gorm"
 )
 
 type Task struct {
 	gorm.Model
-	UserId      uint
-	Title       string
-	Description string
-	DueDate     time.Time
-	Status      string `gorm:"<-:false;-:migration"`
+	UserId           uint
+	Title            string
+	Description      string
+	DueDate          time.Time
+	CreatedAtUtcUnix int64
+	DueDateUtcUnix   int64
+	Status           string `gorm:"<-:false;-:migration"`
+	DueDateLocal     string `gorm:"<-:false;-:migration"`
 }
 
 type Tasks struct {
@@ -64,19 +66,27 @@ func (ts *Tasks) ValidateParams() {
 	}
 }
 
+func getWhatToSort(orderBy string) string {
+	if orderBy == "due_date" {
+		return "due_date_utc_unix"
+	}
+
+	return "created_at_utc_unix"
+}
+
 func (ts *Tasks) QueryPagination(uid uint) {
 	db := GetConnection()
 
 	// only need where cursor if sort by asc and cursor is 0
 	var whereArgs string
-	if ts.Cursor == "" {
-		whereArgs = ts.OrderBy + " is not null AND ?='' AND title LIKE ?"
+	if ts.Cursor == "" || ts.Cursor == 0 {
+		whereArgs = getWhatToSort(ts.OrderBy) + " is not null AND ?='' AND title LIKE ?"
 	} else {
 		whereArgs = FilterCondition(ts.OrderBy, ts.Sort, ts.Search, true)
 	}
 
 	db.Where(&Task{UserId: uid}).
-		Order(fmt.Sprintf("%s %s", ts.OrderBy, ts.Sort)).
+		Order(fmt.Sprintf("%s %s", getWhatToSort(ts.OrderBy), ts.Sort)).
 		Limit(ts.Limit).
 		Find(&ts.Data, whereArgs, ts.Cursor, SearchRule(ts.Search))
 }
@@ -109,9 +119,9 @@ func (ts *Tasks) GetNextCursor() {
 		nextTaskCursor interface{}
 	)
 	if ts.OrderBy == "created_at" {
-		nextTaskCursor = lastTask.CreatedAt.UTC()
+		nextTaskCursor = lastTask.CreatedAtUtcUnix
 	} else if ts.OrderBy == "due_date" {
-		nextTaskCursor = lastTask.DueDate.UTC()
+		nextTaskCursor = lastTask.DueDateUtcUnix
 	}
 
 	db.Order(fmt.Sprintf("%s %s", ts.OrderBy, ts.Sort)).
@@ -122,9 +132,9 @@ func (ts *Tasks) GetNextCursor() {
 	}
 
 	if ts.OrderBy == "created_at" {
-		ts.NextCursor = utils.GetDefaultLayout(nextTask.CreatedAt.UTC())
+		ts.NextCursor = nextTask.CreatedAtUtcUnix
 	} else if ts.OrderBy == "due_date" {
-		ts.NextCursor = utils.GetDefaultLayout(nextTask.DueDate.UTC())
+		ts.NextCursor = nextTask.DueDateUtcUnix
 	}
 }
 
@@ -144,6 +154,33 @@ func GetTask(id uint, userId uint) (*Task, error) {
 	return &task, res.Error
 }
 
+func IsCondEqual(cond string, isEqual bool) string {
+	if isEqual {
+		return fmt.Sprintf("%s=", cond)
+	}
+
+	return fmt.Sprintf("%s", cond)
+}
+
+func FilterCondition(orderBy string, sort string, keyword string, isEqual bool) string {
+	var whereArgs string
+	if sort == "desc" {
+		whereArgs += fmt.Sprintf("%s %s ?", getWhatToSort(orderBy), IsCondEqual("<", isEqual))
+	} else {
+		whereArgs += fmt.Sprintf("%s %s ?", getWhatToSort(orderBy), IsCondEqual(">", isEqual))
+	}
+
+	//filter searching
+	whereArgs += fmt.Sprintf(" AND title LIKE ?")
+
+	return whereArgs
+}
+
+func SearchRule(keyword string) string {
+	return "%" + keyword + "%"
+}
+
+/*=============== MUTATION =============*/
 func (t *Task) Save() (*Task, error) {
 	db := GetConnection()
 	res := db.Create(t)
@@ -193,43 +230,28 @@ func (t *Task) Delete() error {
 	return res.Error
 }
 
-func IsCondEqual(cond string, isEqual bool) string {
-	if isEqual {
-		return fmt.Sprintf("%s=", cond)
-	}
-
-	return fmt.Sprintf("%s", cond)
-}
-
-func FilterCondition(orderBy string, sort string, keyword string, isEqual bool) string {
-	var whereArgs string
-	if sort == "desc" {
-		whereArgs += fmt.Sprintf("%s %s ?", orderBy, IsCondEqual("<", isEqual))
-	} else {
-		whereArgs += fmt.Sprintf("%s %s ?", orderBy, IsCondEqual(">", isEqual))
-	}
-
-	//filter searching
-	whereArgs += fmt.Sprintf(" AND title LIKE ?")
-
-	return whereArgs
-}
-
-func SearchRule(keyword string) string {
-	return "%" + keyword + "%"
-}
-
+/*=================== HOOKS ====================*/
 func (t *Task) AfterFind(tx *gorm.DB) (err error) {
 	//fic status
-	if !t.DueDate.IsZero() {
-		if t.DueDate.Before(time.Now()) {
+	dueDate := t.DueDate.UTC()
+	now := time.Now()
+	if !dueDate.IsZero() {
+		if dueDate.Before(now) {
 			t.Status = "Overdue"
-		} else if t.DueDate.Before(time.Now().AddDate(0, 0, 7)) && t.DueDate.After(time.Now()) {
+		} else if dueDate.Before(now.AddDate(0, 0, 7)) && dueDate.After(now) {
 			t.Status = "Due soon"
-		} else if t.DueDate.After(time.Now()) {
+		} else if dueDate.After(now) {
 			t.Status = "Not urgent"
 		}
 	}
+
+	return
+}
+
+/*=================== HOOKS ====================*/
+func (t *Task) BeforeCreate(tx *gorm.DB) (err error) {
+	t.DueDateUtcUnix = t.DueDate.UTC().UnixNano()
+	t.CreatedAtUtcUnix = time.Now().UTC().UnixNano()
 
 	return
 }

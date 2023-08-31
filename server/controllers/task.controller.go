@@ -108,7 +108,7 @@ func CreateTask(c *fiber.Ctx) error {
 	task := data.Task{
 		Title:       createTaskDto.Title,
 		Description: createTaskDto.Description,
-		DueDate:     createTaskDto.DueDate,
+		DueDate:     createTaskDto.DueDate.UTC(),
 		UserId:      uid,
 	}
 
@@ -183,7 +183,7 @@ func UpdateTask(c *fiber.Ctx) error {
 
 	task.Title = updateTaskDto.Title
 	task.Description = updateTaskDto.Description
-	task.DueDate = updateTaskDto.DueDate
+	task.DueDate = updateTaskDto.DueDate.UTC()
 	task.Update()
 
 	c.Status(http.StatusOK).JSON(fiber.Map{
@@ -262,7 +262,7 @@ func GenerateRandomData(c *fiber.Ctx) error {
 					UserId:      uid,
 					Title:       gofakeit.Sentence(gofakeit.IntRange(5, 10)),
 					Description: gofakeit.Sentence(gofakeit.IntRange(10, 50)),
-					DueDate:     gofakeit.DateRange(time.Now().AddDate(0, 0, -5), time.Now().AddDate(0, 0, 7)),
+					DueDate:     gofakeit.DateRange(time.Now().UTC().AddDate(0, 0, -5), time.Now().UTC().AddDate(0, 0, 7)),
 				}
 
 				_, err := task.Save()
