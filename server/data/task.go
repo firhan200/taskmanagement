@@ -81,7 +81,7 @@ func (ts *Tasks) QueryPagination(uid uint) {
 	// only need where cursor if sort by asc and cursor is 0
 	var whereArgs string
 	if ts.Cursor == "" || ts.Cursor == 0 {
-		whereArgs = getWhatToSort(ts.OrderBy) + " is not null AND ?='' AND title LIKE ?"
+		whereArgs = getWhatToSort(ts.OrderBy) + " is not null AND ?='' AND title ILIKE ?"
 	} else {
 		whereArgs = FilterCondition(ts.OrderBy, ts.Sort, ts.Search, true)
 	}
@@ -97,7 +97,7 @@ func (ts *Tasks) CountTotalData(uid uint) {
 
 	// get total
 	var total int64
-	db.Find(&[]Task{}, "user_id = ? AND title LIKE ? ", uid, SearchRule(ts.Search)).
+	db.Find(&[]Task{}, "user_id = ? AND title ILIKE ? ", uid, SearchRule(ts.Search)).
 		Count(&total)
 	ts.Total = int(total)
 }
@@ -172,7 +172,7 @@ func FilterCondition(orderBy string, sort string, keyword string, isEqual bool) 
 	}
 
 	//filter searching
-	whereArgs += fmt.Sprintf(" AND title LIKE ?")
+	whereArgs += fmt.Sprintf(" AND title ILIKE ?")
 
 	return whereArgs
 }

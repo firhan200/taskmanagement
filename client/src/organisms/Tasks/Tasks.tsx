@@ -95,6 +95,9 @@ export default function Tasks() {
             if (lastPage == null) {
                 return
             }
+            if(lastPage.NextCursor == null){
+                return
+            }
             return lastPage.NextCursor
         },
         refetchOnWindowFocus: false,
