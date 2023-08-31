@@ -2,6 +2,7 @@ package data
 
 import (
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 
@@ -96,7 +97,7 @@ func (ts *Tasks) CountTotalData(uid uint) {
 
 	// get total
 	var total int64
-	db.Find(&[]Task{}, "user_id = ? ", uid).
+	db.Find(&[]Task{}, "user_id = ? AND title LIKE ? ", uid, SearchRule(ts.Search)).
 		Count(&total)
 	ts.Total = int(total)
 }
@@ -177,7 +178,11 @@ func FilterCondition(orderBy string, sort string, keyword string, isEqual bool) 
 }
 
 func SearchRule(keyword string) string {
-	return "%" + keyword + "%"
+	keywordValue := ""
+	if keyword != "" {
+		keywordValue = strings.ToLower(keyword)
+	}
+	return "%" + keywordValue + "%"
 }
 
 /*=============== MUTATION =============*/

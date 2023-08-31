@@ -253,7 +253,7 @@ func GenerateRandomData(c *fiber.Ctx) error {
 	go func() {
 		wg := sync.WaitGroup{}
 
-		for i := 0; i < 10; i++ {
+		for i := 0; i < 100; i++ {
 			wg.Add(1)
 			go func() {
 				defer wg.Done()
@@ -262,7 +262,7 @@ func GenerateRandomData(c *fiber.Ctx) error {
 					UserId:      uid,
 					Title:       gofakeit.Sentence(gofakeit.IntRange(5, 10)),
 					Description: gofakeit.Sentence(gofakeit.IntRange(10, 50)),
-					DueDate:     gofakeit.DateRange(time.Now().UTC().AddDate(0, 0, -5), time.Now().UTC().AddDate(0, 0, 7)),
+					DueDate:     gofakeit.DateRange(time.Now().UTC().AddDate(0, 0, -5), time.Now().UTC().AddDate(0, 0, 14)),
 				}
 
 				_, err := task.Save()
@@ -273,12 +273,8 @@ func GenerateRandomData(c *fiber.Ctx) error {
 				taskchan <- task
 			}()
 		}
-
-		fmt.Println("waiting")
 		wg.Wait()
 		close(taskchan)
-
-		fmt.Println("finish wait")
 	}()
 
 	for tc := range taskchan {

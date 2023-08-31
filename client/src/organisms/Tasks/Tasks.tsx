@@ -18,7 +18,7 @@ export default function Tasks() {
     const { show } = useModal()
     const { logout } = useAuth()
     const { theme } = useTheme()
-    const { sort, keyword, sorting } = useTask()
+    const { sort, keyword, sorting, setTotal, setCurrentTotal } = useTask()
     const limit = 10;
 
     const ArrowUp = () => {
@@ -65,6 +65,8 @@ export default function Tasks() {
                 keyword
             )
 
+            setTotal(res?.Total ?? 0)
+
             return res
         } catch (err) {
             const axiosError = err as AxiosError;
@@ -109,7 +111,18 @@ export default function Tasks() {
         return <Alert type="error" text="Failed to get Tasks" />
     }
 
-    const solidDate = data!
+    const solidData = data!
+
+    // const calculateCurrentTotal = () => {
+    //     let currentTotal = 0
+
+    //     solidData.pages.map((group) => {
+    //         currentTotal += group?.Data.length ?? 0
+    //     })
+
+    //     setCurrentTotal(currentTotal)
+    // }
+    //calculateCurrentTotal();
 
     const applyOrder = (orderBy: "created_at" | "due_date") => {
         sorting({
@@ -147,7 +160,7 @@ export default function Tasks() {
                 </div>
             </div>
 
-            {solidDate.pages.map((group, i) => (
+            {solidData.pages.map((group, i) => (
                 <React.Fragment key={i}>
                     {group?.Data.map((task) => (
                         <TaskRow key={task.ID} task={task} />
