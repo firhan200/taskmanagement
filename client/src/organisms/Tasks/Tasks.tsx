@@ -1,6 +1,7 @@
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { AxiosError } from "axios";
 import React, { useEffect } from "react";
+import { InView } from "react-intersection-observer";
 import Alert from "src/atoms/Alert/Alert";
 import Button from "src/atoms/Button/Button";
 import Loading from "src/atoms/Loading/Loading";
@@ -113,17 +114,6 @@ export default function Tasks() {
 
     const solidData = data!
 
-    // const calculateCurrentTotal = () => {
-    //     let currentTotal = 0
-
-    //     solidData.pages.map((group) => {
-    //         currentTotal += group?.Data.length ?? 0
-    //     })
-
-    //     setCurrentTotal(currentTotal)
-    // }
-    //calculateCurrentTotal();
-
     const applyOrder = (orderBy: "created_at" | "due_date") => {
         sorting({
             OrderBy: orderBy,
@@ -167,7 +157,11 @@ export default function Tasks() {
                     ))}
                 </React.Fragment>
             ))}
-            <div className="text-center">
+            <InView as="div" className="text-center" onChange={(inView) => {
+                if(inView){
+                    fetchNextPage()
+                }
+            }}>
                 <Button
                     colorType="primary"
                     size="md"
@@ -180,7 +174,7 @@ export default function Tasks() {
                             ? 'Load More'
                             : 'Nothing more to load'}
                 </Button>
-            </div>
+            </InView>
             <div>{isFetching && !isFetchingNextPage ? 'Fetching...' : null}</div>
         </div>
     );

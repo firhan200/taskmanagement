@@ -11,23 +11,25 @@ const UnauthorizeRoute = () => {
 	const { isAuthorize } = useAuth();
 	const { theme } = useTheme()
 
-	if(!isAuthorize){
-		return <Navigate to={`/login`}/>
+	if (!isAuthorize) {
+		return <Navigate to={`/login`} />
 	}
 
 	return (
-		<div style={{
-			minHeight: '100vh'
-		}} data-theme={theme}>
-			<Header />
+		<>
 			<Modal />
-			<Container>
-				<Suspense>
-					<Outlet />
-				</Suspense>
-			</Container>
-			<Footer />
-		</div>
+			<div style={{
+				minHeight: '100vh'
+			}} data-theme={theme}>
+				<Header />
+				<Container>
+					<Suspense>
+						<Outlet />
+					</Suspense>
+				</Container>
+				<Footer />
+			</div>
+		</>
 	);
 }
 
