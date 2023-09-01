@@ -6,6 +6,7 @@ import Button from "src/atoms/Button/Button";
 import Loading from "src/atoms/Loading/Loading";
 import Typography from "src/atoms/Typography/Typography";
 import { dateToString } from "src/helpers/date";
+import useModal from "src/hooks/useModal";
 import FormAreaControl from "src/molecules/FormAreaControl/FormAreaControl";
 import FormControl from "src/molecules/FormControl/FormControl";
 import FormControlWrapper from "src/molecules/FormControlWrapper/FormControlWrapper";
@@ -16,11 +17,13 @@ export type ValuePiece = Date | null;
 export type Value = ValuePiece | [ValuePiece, ValuePiece];
 
 export default function AddTask() {
+    const { show } = useModal()
+
     const [isShow, setShow] = useState(false)
     const [title, setTitle] = useState<string>('');
     const [description, setDescription] = useState<string>('');
     const [date, setDate] = useState<Value>(new Date());
-    const [time, setTime] = useState("10:00");
+    const [time, setTime] = useState<string | null>("10:00");
     const [dueDate, setDueDate] = useState<string>('');
 
     useEffect(() => {
@@ -50,6 +53,8 @@ export default function AddTask() {
             setTitle('')
             setDescription('')
             setShow(false)
+
+            show(`Succesfully Creating Task: ${title}`, null)
         }
     })
 

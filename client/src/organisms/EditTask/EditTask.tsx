@@ -25,7 +25,7 @@ export default function EditTask() {
     const [title, setTitle] = useState<string>('');
     const [description, setDescription] = useState<string>('');
     const [date, setDate] = useState<Value>(new Date());
-    const [time, setTime] = useState("10:00");
+    const [time, setTime] = useState<string | null>("10:00");
     const [dueDate, setDueDate] = useState<string>('');
     const [loadingData, setLoading] = useState(false);
 

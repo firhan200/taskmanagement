@@ -74,7 +74,10 @@ export default function Tasks() {
             const unauthorized = axiosError.response?.status === 401 ?? false
             if (unauthorized) {
                 show("Unauthorized", logout)
+                return
             }
+
+            show(axiosError.message ?? "Failed to fetch data", null)
         }
     }
 
