@@ -46,7 +46,7 @@ services:
     ports:
       - ${DB_PORT}:${DB_PORT}
     volumes:
-      - ./postgress-data:/var/lib/postgresql/data
+      - postgres-data:/var/lib/postgresql/data
   # taskmanagement_db:
   #   image: mysql:5.7
   #   container_name: taskmanagement_db
@@ -70,3 +70,6 @@ services:
 networks:
   taskmanagement-networks:
     driver: bridge
+
+volumes:
+  postgres-data:
