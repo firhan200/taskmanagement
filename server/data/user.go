@@ -9,9 +9,7 @@ import (
 
 type IUserManager interface {
 	Create(value interface{}) (tx *gorm.DB)
-	First(dest interface{}, conds ...interface{}) (tx *gorm.DB)
 	Find(dest interface{}, conds ...interface{}) (tx *gorm.DB)
-	Where(query interface{}, args ...interface{}) (tx *gorm.DB)
 }
 
 type UserManager struct {
@@ -48,7 +46,7 @@ func (um *UserManager) GetByEmailAddressAndPassword(
 		return nil, err
 	}
 
-	var u *User
+	var u User
 
 	um.db.Find(&u, &User{
 		EmailAddress: emailAddress,
@@ -59,7 +57,7 @@ func (um *UserManager) GetByEmailAddressAndPassword(
 		return nil, errors.New("user not found")
 	}
 
-	return u, nil
+	return &u, nil
 }
 
 func (um *UserManager) Register(
