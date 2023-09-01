@@ -3,10 +3,13 @@ package routes
 import (
 	"github.com/firhan200/taskmanagement/controllers"
 	"github.com/gofiber/fiber/v2"
+	"gorm.io/gorm"
 )
 
-func PublicRoutes(app *fiber.App) {
+func PublicRoutes(app *fiber.App, db *gorm.DB) {
+	loginHandler := controllers.NewLoginHandler(db)
+
 	auth := app.Group("auth")
-	auth.Post("/login", controllers.Login)
-	auth.Post("/register", controllers.Register)
+	auth.Post("/login", loginHandler.Login())
+	auth.Post("/register", loginHandler.Register())
 }

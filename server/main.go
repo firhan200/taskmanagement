@@ -10,8 +10,9 @@ import (
 )
 
 func main() {
-	//auto migrate schema to db
+	//get new connection, call this once to create only 1 connection pool
 	db := data.NewConnection()
+	//auto migrate schema to db
 	data.Migrate(db)
 
 	app := fiber.New()
@@ -26,8 +27,8 @@ func main() {
 		AllowMethods:     "GET,POST,HEAD,PUT,DELETE,PATCH,OPTIONS",
 	}))
 
-	routes.PrivateRoutes(app)
-	routes.PublicRoutes(app)
+	routes.PrivateRoutes(app, db)
+	routes.PublicRoutes(app, db)
 
 	app.Listen(":8000")
 }

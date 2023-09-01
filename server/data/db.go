@@ -11,7 +11,15 @@ import (
 	"gorm.io/gorm/logger"
 )
 
+var (
+	db *gorm.DB
+)
+
 func NewConnection() *gorm.DB {
+	if db != nil {
+		return db
+	}
+
 	//get connection attr from .env
 	err := godotenv.Load()
 	if err != nil {
