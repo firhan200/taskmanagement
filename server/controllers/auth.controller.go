@@ -66,15 +66,8 @@ func Register(c *fiber.Ctx) error {
 	db := data.NewConnection()
 	userManager := data.NewUserManager(db)
 
-	//init new user instance
-	u := data.User{
-		FullName:     registerDto.FullName,
-		EmailAddress: registerDto.EmailAddress,
-		Password:     registerDto.Password,
-	}
-
 	//save and check if error
-	_, err := userManager.Register(
+	u, err := userManager.Register(
 		registerDto.FullName,
 		registerDto.EmailAddress,
 		registerDto.Password,

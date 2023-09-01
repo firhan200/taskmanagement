@@ -2,7 +2,6 @@ package data
 
 import (
 	"errors"
-	"fmt"
 
 	"github.com/firhan200/taskmanagement/utils"
 	"gorm.io/gorm"
@@ -43,24 +42,24 @@ func (um *UserManager) GetByEmailAddressAndPassword(
 	emailAddress string,
 	password string,
 ) (*User, error) {
-	var u User
-
 	//encrypt password
 	hashed, err := utils.HashPassword(password)
 	if err != nil {
 		return nil, err
 	}
 
-	um.db.Where(&User{
+	var u *User
+
+	um.db.Find(&u, &User{
 		EmailAddress: emailAddress,
 		Password:     hashed,
-	}).First(&u)
+	})
 
 	if u.ID == 0 {
 		return nil, errors.New("user not found")
 	}
 
-	return &u, nil
+	return u, nil
 }
 
 func (um *UserManager) Register(
@@ -68,6 +67,18 @@ func (um *UserManager) Register(
 	emailAddress string,
 	password string,
 ) (*UserSecure, error) {
+	//check if email already taken
+	var existedUser *User
+
+	//find
+	um.db.Find(&existedUser, &User{
+		EmailAddress: emailAddress,
+	})
+
+	if existedUser.ID > 0 {
+		return nil, errors.New("email already taken")
+	}
+
 	user := &User{
 		FullName:     fullName,
 		EmailAddress: emailAddress,
@@ -91,22 +102,15 @@ func (um *UserManager) Register(
 }
 
 /*======================== HOOKS ============================*/
-func (u *User) BeforeSave(db *gorm.DB) error {
-	//check if email already taken
-	var existedUser User
-	db.Where((&User{
-		EmailAddress: u.EmailAddress,
-	})).Find(&existedUser)
-	if existedUser.ID != 0 {
-		return fmt.Errorf("Email Already Taken")
+func (u *User) BeforeSave(db *gorm.DB) (err error) {
+	if u.Password != "" {
+		//turn password into hash
+		hashedPass, err := utils.HashPassword(u.Password)
+		if err != nil {
+			return err
+		}
+		u.Password = hashedPass
 	}
 
-	//turn password into hash
-	hashedPass, err := utils.HashPassword(u.Password)
-	if err != nil {
-		return err
-	}
-	u.Password = hashedPass
-
-	return nil
+	return
 }
