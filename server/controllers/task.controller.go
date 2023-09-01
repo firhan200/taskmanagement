@@ -1,8 +1,6 @@
 package controllers
 
 import (
-	"errors"
-	"fmt"
 	"net/http"
 	"strconv"
 	"sync"
@@ -31,17 +29,17 @@ func GetTasks(c *fiber.Ctx) error {
 	sort := c.Query("sort", "desc")
 	search := c.Query("search", "")
 
-	// c.Status(http.StatusOK).JSON(&data.Tasks{})
-	// return nil
+	db := data.NewConnection()
+	taskManager := data.NewTaskManager(db)
 
-	tasks := data.Tasks{
-		Cursor:  cursor,
-		Limit:   limit,
-		OrderBy: orderBy,
-		Sort:    sort,
-		Search:  search,
-	}
-	tasks.GetByUserId(uid)
+	tasks := taskManager.GetTasks(
+		uid,
+		cursor,
+		limit,
+		orderBy,
+		sort,
+		search,
+	)
 
 	//get body parser
 	c.Status(http.StatusOK).JSON(tasks)
@@ -53,161 +51,154 @@ func GetTaskById(c *fiber.Ctx) error {
 	//get user id
 	uid, err := utils.ExtractTokenID(c)
 	if err != nil {
-		c.Status(http.StatusBadRequest).JSON(fiber.Map{
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
 			"error": err.Error(),
 		})
-		return err
 	}
 
 	idParams := c.Params("id")
 	//parse
 	idInt, err := strconv.Atoi(idParams)
 	if err != nil {
-		c.Status(http.StatusBadRequest).JSON(fiber.Map{
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
 			"error": err.Error(),
 		})
-		return err
 	}
 	id := uint(idInt)
 
-	task, err := data.GetTask(id, uid)
+	db := data.NewConnection()
+	taskManager := data.NewTaskManager(db)
+	task, err := taskManager.GetSingleTask(uid, id)
+
+	if err != nil {
+		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+	}
 
 	//get body parser
-	c.Status(http.StatusOK).JSON(task)
-	return nil
+	return c.Status(http.StatusOK).JSON(task)
 }
 
 func CreateTask(c *fiber.Ctx) error {
 	//get user id
 	uid, err := utils.ExtractTokenID(c)
 	if err != nil {
-		c.Status(http.StatusBadRequest).JSON(fiber.Map{
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
 			"error": err.Error(),
 		})
-		return nil
 	}
 
 	//get body parser
 	createTaskDto := dto.CreateTaskDto{}
 	if err := c.BodyParser(&createTaskDto); err != nil {
-		c.Status(http.StatusBadRequest).JSON(fiber.Map{
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
 			"error": err.Error(),
 		})
-		return nil
 	}
 
 	//validate
 	if createTaskDto.Title == "" || createTaskDto.Description == "" {
-		c.Status(http.StatusBadRequest).JSON(fiber.Map{
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
 			"error": "Title, Description or Due Date cannot be empty",
 		})
-		return nil
 	}
 
-	//init new task instance
-	task := data.Task{
-		Title:       createTaskDto.Title,
-		Description: createTaskDto.Description,
-		DueDate:     createTaskDto.DueDate.UTC(),
-		UserId:      uid,
-	}
+	db := data.NewConnection()
+	taskManager := data.NewTaskManager(db)
+	createdId, saveErr := taskManager.Save(
+		uid,
+		createTaskDto.Title,
+		createTaskDto.Description,
+		createTaskDto.DueDate,
+	)
 
-	//save and check if error
-	taskId, err := task.Save()
-	if err != nil {
-		c.Status(http.StatusInternalServerError).JSON(fiber.Map{
-			"error": err.Error(),
+	if saveErr != nil {
+		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{
+			"error": saveErr.Error(),
 		})
-		return nil
 	}
 
-	c.Status(http.StatusOK).JSON(fiber.Map{
-		"task_id": taskId,
+	return c.Status(http.StatusOK).JSON(fiber.Map{
+		"task_id": createdId,
 	})
-	return nil
 }
 
 func UpdateTask(c *fiber.Ctx) error {
 	idParams := c.Params("id")
 	if idParams == "" {
-		c.Status(http.StatusBadRequest).JSON(fiber.Map{
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
 			"error": "Id not found",
 		})
-		return errors.New("id not found")
 	}
 
 	//parse
 	idInt, err := strconv.Atoi(idParams)
 	if err != nil {
-		c.Status(http.StatusBadRequest).JSON(fiber.Map{
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
 			"error": err.Error(),
 		})
-		return err
 	}
 	id := uint(idInt)
 
 	//get user id
 	uid, err := utils.ExtractTokenID(c)
 	if err != nil {
-		c.Status(http.StatusBadRequest).JSON(fiber.Map{
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
 			"error": err.Error(),
 		})
-		return err
 	}
-	fmt.Print(uid)
 
 	//get body parser
 	updateTaskDto := dto.UpdateTaskDto{}
 	if err := c.BodyParser(&updateTaskDto); err != nil {
-		c.Status(http.StatusBadRequest).JSON(fiber.Map{
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
 			"error": err.Error(),
 		})
-		return err
 	}
 
 	//validate
 	if updateTaskDto.Title == "" || updateTaskDto.Description == "" {
-		c.Status(http.StatusBadRequest).JSON(fiber.Map{
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
 			"error": "Title, Description or Due Date cannot be empty",
 		})
-		return errors.New("Title, Description or Due Date cannot be empty")
 	}
 
-	task, err := data.GetTask(id, uid)
-	if err != nil {
-		c.Status(http.StatusInternalServerError).JSON(fiber.Map{
-			"error": err.Error(),
+	db := data.NewConnection()
+	taskManager := data.NewTaskManager(db)
+	updatedTask, saveErr := taskManager.Update(
+		uid,
+		id,
+		updateTaskDto.Title,
+		updateTaskDto.Description,
+		updateTaskDto.DueDate,
+	)
+
+	if saveErr != nil {
+		return c.Status(http.StatusOK).JSON(fiber.Map{
+			"task": updatedTask,
 		})
-		return err
 	}
 
-	task.Title = updateTaskDto.Title
-	task.Description = updateTaskDto.Description
-	task.DueDate = updateTaskDto.DueDate.UTC()
-	task.Update()
-
-	c.Status(http.StatusOK).JSON(fiber.Map{
-		"task": task,
+	return c.Status(http.StatusOK).JSON(fiber.Map{
+		"task": updatedTask,
 	})
-	return nil
 }
 
 func DeleteTask(c *fiber.Ctx) error {
 	idParams := c.Params("id")
 	if idParams == "" {
-		c.Status(http.StatusBadRequest).JSON(fiber.Map{
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
 			"error": "Id not found",
 		})
-		return errors.New("Id not found")
 	}
 
 	//parse
 	idInt, err := strconv.Atoi(idParams)
 	if err != nil {
-		c.Status(http.StatusBadRequest).JSON(fiber.Map{
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
 			"error": err.Error(),
 		})
-		return err
 	}
 	id := uint(idInt)
 
@@ -219,22 +210,18 @@ func DeleteTask(c *fiber.Ctx) error {
 		})
 		return err
 	}
-	fmt.Print(uid)
 
-	task, err := data.GetTask(id, uid)
-	if err != nil {
-		c.Status(http.StatusInternalServerError).JSON(fiber.Map{
-			"error": err.Error(),
+	db := data.NewConnection()
+	taskManager := data.NewTaskManager(db)
+	deleteErr := taskManager.Remove(uid, id)
+
+	if deleteErr != nil {
+		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{
+			"error": deleteErr,
 		})
-		return err
 	}
 
-	task.Delete()
-
-	c.Status(http.StatusOK).JSON(fiber.Map{
-		"task": task,
-	})
-	return nil
+	return c.SendStatus(http.StatusOK)
 }
 
 func GenerateRandomData(c *fiber.Ctx) error {
@@ -247,6 +234,9 @@ func GenerateRandomData(c *fiber.Ctx) error {
 		return nil
 	}
 
+	db := data.NewConnection()
+	tm := data.NewTaskManager(db)
+
 	tasks := []*data.Task{}
 	taskchan := make(chan *data.Task)
 
@@ -258,14 +248,12 @@ func GenerateRandomData(c *fiber.Ctx) error {
 			go func() {
 				defer wg.Done()
 
-				task := &data.Task{
-					UserId:      uid,
-					Title:       gofakeit.Sentence(gofakeit.IntRange(5, 10)),
-					Description: gofakeit.Sentence(gofakeit.IntRange(10, 50)),
-					DueDate:     gofakeit.DateRange(time.Now().UTC().AddDate(0, 0, -5), time.Now().UTC().AddDate(0, 0, 14)),
-				}
-
-				_, err := task.Save()
+				task, err := tm.Save(
+					uid,
+					gofakeit.Sentence(gofakeit.IntRange(5, 10)),
+					gofakeit.Sentence(gofakeit.IntRange(10, 50)),
+					gofakeit.DateRange(time.Now().UTC().AddDate(0, 0, -5), time.Now().UTC().AddDate(0, 0, 14)),
+				)
 				if err != nil {
 					return
 				}

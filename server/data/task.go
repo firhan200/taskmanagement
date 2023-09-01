@@ -1,6 +1,7 @@
 package data
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 	"sync"
@@ -8,6 +9,22 @@ import (
 
 	"gorm.io/gorm"
 )
+
+type ITaskManager interface {
+	Create(value interface{}) (tx *gorm.DB)
+	First(dest interface{}, conds ...interface{}) (tx *gorm.DB)
+	Save(value interface{}) (tx *gorm.DB)
+	Delete(value interface{}, conds ...interface{}) (tx *gorm.DB)
+	Limit(limit int) (tx *gorm.DB)
+	Order(value interface{}) (tx *gorm.DB)
+	Find(dest interface{}, conds ...interface{}) (tx *gorm.DB)
+	Count(count *int64) (tx *gorm.DB)
+	Where(query interface{}, args ...interface{}) (tx *gorm.DB)
+}
+
+type TaskManager struct {
+	db ITaskManager
+}
 
 type Task struct {
 	gorm.Model
@@ -22,6 +39,7 @@ type Task struct {
 }
 
 type Tasks struct {
+	tm         *TaskManager
 	Data       []Task
 	Cursor     interface{}
 	Limit      int
@@ -32,24 +50,50 @@ type Tasks struct {
 	NextCursor interface{}
 }
 
-func (ts *Tasks) GetByUserId(uid uint) {
-	ts.ValidateParams()
+func NewTaskManager(db *gorm.DB) *TaskManager {
+	return &TaskManager{
+		db: db,
+	}
+}
+
+func (tm *TaskManager) GetTasks(
+	uid uint,
+	cursor interface{},
+	limit int,
+	orderBy string,
+	sort string,
+	search string,
+) *Tasks {
+	tasks := &Tasks{
+		tm:      tm,
+		Cursor:  cursor,
+		Limit:   limit,
+		OrderBy: orderBy,
+		Sort:    sort,
+		Search:  search,
+	}
+
+	//validate parameters
+	tasks.ValidateParams()
 
 	var wg sync.WaitGroup
+
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		ts.QueryPagination(uid)
-		ts.GetNextCursor()
+		tasks.QueryPagination(uid)
+		tasks.GetNextCursor()
 	}()
 
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		ts.CountTotalData(uid)
+		tasks.CountTotalData(uid)
 	}()
 
 	wg.Wait()
+
+	return tasks
 }
 
 // set default value
@@ -76,8 +120,6 @@ func getWhatToSort(orderBy string) string {
 }
 
 func (ts *Tasks) QueryPagination(uid uint) {
-	db := GetConnection()
-
 	// only need where cursor if sort by asc and cursor is 0
 	var whereArgs string
 	if ts.Cursor == "" || ts.Cursor == 0 {
@@ -86,26 +128,22 @@ func (ts *Tasks) QueryPagination(uid uint) {
 		whereArgs = FilterCondition(ts.OrderBy, ts.Sort, ts.Search, true)
 	}
 
-	db.Where(&Task{UserId: uid}).
+	ts.tm.db.Where(&Task{UserId: uid}).
 		Order(fmt.Sprintf("%s %s", getWhatToSort(ts.OrderBy), ts.Sort)).
 		Limit(ts.Limit).
 		Find(&ts.Data, whereArgs, ts.Cursor, SearchRule(ts.Search))
 }
 
 func (ts *Tasks) CountTotalData(uid uint) {
-	db := GetConnection()
-
 	// get total
 	var total int64
-	db.Find(&[]Task{}, "user_id = ? AND title ILIKE ? ", uid, SearchRule(ts.Search)).
+	ts.tm.db.Find(&[]Task{}, "user_id = ? AND title ILIKE ? ", uid, SearchRule(ts.Search)).
 		Count(&total)
 	ts.Total = int(total)
 }
 
 // only call this function after get main query data
 func (ts *Tasks) GetNextCursor() {
-	db := GetConnection()
-
 	//get last data
 	if len(ts.Data) < 1 {
 		return
@@ -125,7 +163,7 @@ func (ts *Tasks) GetNextCursor() {
 		nextTaskCursor = lastTask.DueDateUtcUnix
 	}
 
-	db.Order(fmt.Sprintf("%s %s", ts.OrderBy, ts.Sort)).
+	ts.tm.db.Order(fmt.Sprintf("%s %s", ts.OrderBy, ts.Sort)).
 		Limit(ts.Limit).
 		Find(&nextTask, FilterCondition(ts.OrderBy, ts.Sort, ts.Search, false), nextTaskCursor, SearchRule(ts.Search))
 	if nextTask.ID == 0 {
@@ -137,22 +175,6 @@ func (ts *Tasks) GetNextCursor() {
 	} else if ts.OrderBy == "due_date" {
 		ts.NextCursor = nextTask.DueDateUtcUnix
 	}
-}
-
-func GetTask(id uint, userId uint) (*Task, error) {
-	db := GetConnection()
-	var task Task
-	res := db.First(&task, id)
-
-	if res.Error != nil {
-		return &task, res.Error
-	}
-
-	if task.UserId != userId {
-		return &task, fmt.Errorf("Unauthorized action")
-	}
-
-	return &task, res.Error
 }
 
 func IsCondEqual(cond string, isEqual bool) string {
@@ -185,52 +207,105 @@ func SearchRule(keyword string) string {
 	return "%" + keywordValue + "%"
 }
 
-/*=============== MUTATION =============*/
-func (t *Task) Save() (*Task, error) {
-	db := GetConnection()
-	res := db.Create(t)
+func (tm *TaskManager) GetSingleTask(uid uint, id uint) (*Task, error) {
+	var (
+		task *Task
+	)
 
-	return t, res.Error
+	//check if task exist
+	res := tm.db.First(&task, id)
+	if res.RowsAffected < 0 {
+		return nil, errors.New("task not found")
+	}
+
+	//check if authorize
+	if task.UserId != uid {
+		return nil, fmt.Errorf("unauthorized to make changes")
+	}
+
+	return task, nil
 }
 
-func (t *Task) Update() (*Task, error) {
-	db := GetConnection()
+/*=============== MUTATION =============*/
+func (tm *TaskManager) Save(
+	uid uint,
+	title string,
+	desc string,
+	dueDate time.Time,
+) (*Task, error) {
+	createdTask := &Task{
+		UserId:      uid,
+		Title:       title,
+		Description: desc,
+		DueDate:     dueDate,
+	}
+	res := tm.db.Create(createdTask)
 
-	var task *Task
-	res := db.First(&task, t.ID)
+	return createdTask, res.Error
+}
+
+func (tm *TaskManager) Update(
+	uid uint,
+	id uint,
+	title string,
+	description string,
+	dueDate time.Time,
+) (*Task, error) {
+	var (
+		task *Task
+	)
+
+	//check if task exist
+	res := tm.db.First(&task, id)
 	if res.RowsAffected < 0 {
+		return nil, errors.New("task not found")
+	}
+
+	//check if error
+	if res.Error != nil {
 		return nil, res.Error
 	}
 
 	//check if authorize
-	if task.UserId != t.UserId {
-		return nil, fmt.Errorf("Unauthorized to make changes")
+	if task.UserId != uid {
+		return nil, fmt.Errorf("unauthorized to make changes")
 	}
 
-	fmt.Print(t)
-
 	//update
-	db.Save(&t)
+	task.Title = title
+	task.Description = description
+	task.DueDate = dueDate
 
-	return t, res.Error
+	tm.db.Save(task)
+
+	return task, nil
 }
 
-func (t *Task) Delete() error {
-	db := GetConnection()
+func (tm *TaskManager) Remove(
+	uid uint,
+	id uint,
+) error {
+	var (
+		task *Task
+	)
 
-	var task *Task
-	res := db.First(&task, t.ID)
+	//check if task exist
+	res := tm.db.First(&task, id)
 	if res.RowsAffected < 0 {
+		return errors.New("task not found")
+	}
+
+	if res.Error != nil {
 		return res.Error
 	}
 
 	//check if authorize
-	if task.UserId != t.UserId {
-		return fmt.Errorf("Unauthorized to make changes")
+	if task.UserId != uid {
+		return errors.New("unauthorized to make changes")
 	}
 
 	//update
-	db.Delete(&t)
+	tm.db.Delete(&task)
 
 	return res.Error
 }

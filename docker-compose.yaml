@@ -21,7 +21,7 @@ services:
     command: 'npm run dev'
     volumes:
       - ./client:/app/www/client
-      - taskmanagement_volume:/client/node_modules
+      - ./client:/node_modules
     ports:
       - 3000:3000
     networks:
@@ -44,7 +44,7 @@ services:
     ports:
       - ${DB_PORT}:${DB_PORT}
     volumes:
-      - taskmanagement_volume:/var/lib/mysql
+      - ./postgress-data:/var/lib/postgresql/data
   # taskmanagement_db:
   #   image: mysql:5.7
   #   container_name: taskmanagement_db
@@ -68,6 +68,3 @@ services:
 networks:
   taskmanagement-networks:
     driver: bridge
-
-volumes:
-  taskmanagement_volume:

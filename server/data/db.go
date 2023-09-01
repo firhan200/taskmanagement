@@ -11,20 +11,7 @@ import (
 	"gorm.io/gorm/logger"
 )
 
-var (
-	db *gorm.DB
-)
-
-func init() {
-	connectionDB := GetConnection()
-	db = connectionDB
-}
-
-func GetConnection() *gorm.DB {
-	if db != nil {
-		return db
-	}
-
+func NewConnection() *gorm.DB {
 	//get connection attr from .env
 	err := godotenv.Load()
 	if err != nil {
@@ -53,7 +40,7 @@ func GetConnection() *gorm.DB {
 	return db
 }
 
-func Migrate() {
+func Migrate(db *gorm.DB) {
 	log.Print("Migrating data...")
 	db.AutoMigrate(&User{}, &Task{})
 	log.Print("Migrating success")

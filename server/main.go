@@ -11,7 +11,8 @@ import (
 
 func main() {
 	//auto migrate schema to db
-	data.Migrate()
+	db := data.NewConnection()
+	data.Migrate(db)
 
 	app := fiber.New()
 
