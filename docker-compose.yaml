@@ -12,6 +12,8 @@ services:
       - 8000:8000
     networks:
       - taskmanagement-networks
+    depends_on:
+      - taskmanagement_db
 
   client:
     container_name: client

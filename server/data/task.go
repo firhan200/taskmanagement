@@ -73,6 +73,8 @@ func (tm *TaskManager) GetTasks(
 		Search:  search,
 	}
 
+	fmt.Printf("ID USERNYA: %d", uid)
+
 	//validate parameters
 	tasks.ValidateParams()
 

@@ -4,6 +4,7 @@ import React, { useEffect } from "react";
 import { InView } from "react-intersection-observer";
 import Alert from "src/atoms/Alert/Alert";
 import Button from "src/atoms/Button/Button";
+import EmptyState from "src/atoms/EmptyState/EmptyState";
 import Loading from "src/atoms/Loading/Loading";
 import SkeletonLoading from "src/atoms/SkeletonLoading/SkeletonLoading";
 import Typography from "src/atoms/Typography/Typography";
@@ -139,6 +140,14 @@ export default function Tasks() {
 
             </span>
         )
+    }
+
+    //check if empty
+    if(solidData.pages.length === 1){
+        const currentPage = solidData.pages[0];
+        if(typeof currentPage === 'undefined' || currentPage === null || currentPage.Data.length < 1){
+            return <EmptyState />
+        }
     }
 
     return (
