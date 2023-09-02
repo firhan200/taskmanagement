@@ -19,11 +19,14 @@ export type Value = ValuePiece | [ValuePiece, ValuePiece];
 export default function AddTask() {
     const { show } = useModal()
 
+    const now = new Date()
+    const [hour, minute] = [now.getHours(), now.getMinutes()]
+
     const [isShow, setShow] = useState(false)
     const [title, setTitle] = useState<string>('');
     const [description, setDescription] = useState<string>('');
-    const [date, setDate] = useState<Value>(new Date());
-    const [time, setTime] = useState<string | null>("10:00");
+    const [date, setDate] = useState<Value>(now);
+    const [time, setTime] = useState<string | null>(`${hour}:${minute}`);
     const [dueDate, setDueDate] = useState<string>('');
 
     useEffect(() => {
