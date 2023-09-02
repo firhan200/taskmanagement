@@ -111,7 +111,7 @@ func TestTaskService_GetTasksByUserId_GetAllEmpty(t *testing.T) {
 
 	m.On("GetAll", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return([]data.Task{}, nil)
 	_, err := ts.GetTasksByUserId(1, "", 10, "created_at", "desc", "")
-	assert.Error(t, err)
+	assert.NoError(t, err)
 }
 
 func TestTaskService_GetTasksByUserId_GetAllNotEmpty(t *testing.T) {

@@ -113,7 +113,7 @@ func (ts *TaskService) GetTasksByUserId(
 	tasks.Data = res
 
 	if len(res) < 1 {
-		return tasks, errors.New("no more data")
+		return tasks, nil
 	}
 
 	//set next cursor
