@@ -2,7 +2,6 @@ package services
 
 import (
 	"errors"
-	"reflect"
 	"testing"
 
 	"github.com/firhan200/taskmanagement/data"
@@ -29,129 +28,93 @@ func (m *MockUserRepository) Insert(name string, emailAddress string, password s
 	return args.Get(0).(*data.UserSecure), args.Error(1)
 }
 
-func TestUserService_Login(t *testing.T) {
+func TestUserService_NewUserService_Init(t *testing.T) {
 	m := new(MockUserRepository)
 	us := NewUserService(m)
+	assert.NotNil(t, us)
 
-	var nilUser *data.User
+	us2 := NewUserService(m)
+	assert.NotNil(t, us2)
+}
+
+func TestUserService_Login_Failed(t *testing.T) {
+	m := new(MockUserRepository)
+	us := &UserService{
+		ur: m,
+	}
 
 	//check if login failed
-	call := m.On("GetByEmailAddressAndPassword", mock.Anything, mock.Anything).Return(nilUser, errors.New("user not found"))
+	m.On("GetByEmailAddressAndPassword", mock.Anything, mock.Anything).Return(&data.User{}, errors.New("user not found"))
 	_, err := us.Login("not@user.com", "password")
-	assert.Error(t, err, errors.New("user not found"))
+	assert.Error(t, err)
+}
 
-	//test login success
-	call.Unset()
+func TestUserService_Login_ValidateParams(t *testing.T) {
+	m := new(MockUserRepository)
+	us := &UserService{
+		ur: m,
+	}
+
+	//check if login failed
+	_, err := us.Login("", "password")
+	assert.Error(t, err)
+
+	_, err2 := us.Login("email@email.com", "")
+	assert.Error(t, err2)
+}
+
+func TestUserService_Login_Success(t *testing.T) {
+	m := new(MockUserRepository)
+	us := &UserService{
+		ur: m,
+	}
+
+	//check if login failed
 	m.On("GetByEmailAddressAndPassword", mock.Anything, mock.Anything).Return(&data.User{
 		EmailAddress: "valid@email.com",
 	}, nil)
 	u, err := us.Login("valid@email.com", "password")
-	assert.Nil(t, err)
-	assert.Equal(t, "valid@email.com", u.EmailAddress)
-
-	//test pass empty
-	call.Unset()
-	m.On("GetByEmailAddressAndPassword", mock.Anything, mock.Anything).Return(nilUser, nil)
-	_, passwordErr := us.Login("valid@email.com", "")
-	assert.NotNil(t, passwordErr)
-
-	//test email empty
-	call.Unset()
-	m.On("GetByEmailAddressAndPassword", mock.Anything, mock.Anything).Return(nilUser, nil)
-	_, emailErr := us.Login("", "password")
-	assert.NotNil(t, emailErr)
+	assert.NoError(t, err)
+	assert.NotNil(t, u)
 }
 
-func TestUserService_Register(t *testing.T) {
+func TestUserService_Register_ValidateParams(t *testing.T) {
 	m := new(MockUserRepository)
+	us := &UserService{
+		ur: m,
+	}
 
-	var user *data.User
-	var userSecure *data.UserSecure
+	_, err := us.Register("", "", "")
+	assert.Error(t, err)
 
-	m.On("FindByEmail", mock.Anything, mock.Anything, mock.Anything).Return(user, errors.New("user not found"))
-	m.On("Insert", mock.Anything, mock.Anything, mock.Anything).Return(userSecure, nil)
+	_, err2 := us.Register("name", "", "")
+	assert.Error(t, err2)
 
-	type fields struct {
-		ur IUserRepository
+	_, err3 := us.Register("name", "email@email.com", "")
+	assert.Error(t, err3)
+}
+
+func TestUserService_Register_Failed(t *testing.T) {
+	m := new(MockUserRepository)
+	us := &UserService{
+		ur: m,
 	}
-	type args struct {
-		name  string
-		email string
-		pass  string
+
+	m.On("FindByEmail", mock.Anything).Return(&data.User{}, nil)
+
+	_, err := us.Register("name", "valid@email.com", "password")
+	assert.Error(t, err)
+}
+
+func TestUserService_Register_Success(t *testing.T) {
+	m := new(MockUserRepository)
+	us := &UserService{
+		ur: m,
 	}
-	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		want    *data.UserSecure
-		wantErr bool
-	}{
-		{
-			name: "register failed",
-			fields: fields{
-				ur: m,
-			},
-			args: args{
-				name:  "",
-				email: "",
-				pass:  "",
-			},
-			want:    nil,
-			wantErr: true,
-		},
-		{
-			name: "register failed",
-			fields: fields{
-				ur: m,
-			},
-			args: args{
-				name:  "name",
-				email: "",
-				pass:  "",
-			},
-			want:    nil,
-			wantErr: true,
-		},
-		{
-			name: "register failed",
-			fields: fields{
-				ur: m,
-			},
-			args: args{
-				name:  "name",
-				email: "email",
-				pass:  "",
-			},
-			want:    nil,
-			wantErr: true,
-		},
-		{
-			name: "register success",
-			fields: fields{
-				ur: m,
-			},
-			args: args{
-				name:  "name",
-				email: "email",
-				pass:  "pass",
-			},
-			want:    nil,
-			wantErr: false,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			us := &UserService{
-				ur: tt.fields.ur,
-			}
-			got, err := us.Register(tt.args.name, tt.args.email, tt.args.pass)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("UserService.Register() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("UserService.Register() = %v, want %v", got, tt.want)
-			}
-		})
-	}
+
+	m.On("FindByEmail", mock.Anything).Return(&data.User{}, errors.New("user not found"))
+	m.On("Insert", mock.Anything, mock.Anything, mock.Anything).Return(&data.UserSecure{}, nil)
+
+	_, err := us.Register("name", "valid@email.com", "password")
+	assert.NoError(t, err)
 }
