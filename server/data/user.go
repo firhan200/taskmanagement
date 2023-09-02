@@ -48,12 +48,16 @@ func (um *UserManager) GetByEmailAddressAndPassword(
 
 	var u User
 
-	um.db.Find(&u, &User{
+	res := um.db.Find(&u, &User{
 		EmailAddress: emailAddress,
 		Password:     hashed,
 	})
 
-	if u.ID == 0 {
+	if res.Error != nil {
+		return nil, res.Error
+	}
+
+	if u.EmailAddress == "" {
 		return nil, errors.New("user not found")
 	}
 

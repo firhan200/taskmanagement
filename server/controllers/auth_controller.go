@@ -3,8 +3,9 @@ package controllers
 import (
 	"net/http"
 
-	"github.com/firhan200/taskmanagement/data"
 	"github.com/firhan200/taskmanagement/dto"
+	"github.com/firhan200/taskmanagement/repositories"
+	"github.com/firhan200/taskmanagement/services"
 	"github.com/firhan200/taskmanagement/utils"
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"
@@ -37,9 +38,9 @@ func (lh *LoginHandler) Login() fiber.Handler {
 			})
 		}
 
-		db := data.NewConnection()
-		userManager := data.NewUserManager(db)
-		u, err := userManager.GetByEmailAddressAndPassword(loginDto.EmailAddress, loginDto.Password)
+		repo := repositories.NewUserRepository(lh.db)
+		service := services.NewUserService(repo)
+		u, err := service.Login(loginDto.EmailAddress, loginDto.Password)
 
 		if err != nil {
 			return c.Status(http.StatusBadRequest).JSON(fiber.Map{
@@ -77,11 +78,11 @@ func (lh *LoginHandler) Register() fiber.Handler {
 			})
 		}
 
-		db := data.NewConnection()
-		userManager := data.NewUserManager(db)
+		repo := repositories.NewUserRepository(lh.db)
+		service := services.NewUserService(repo)
 
 		//save and check if error
-		u, err := userManager.Register(
+		u, err := service.Register(
 			registerDto.FullName,
 			registerDto.EmailAddress,
 			registerDto.Password,

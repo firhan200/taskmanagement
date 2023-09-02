@@ -9,6 +9,8 @@ import (
 	"github.com/brianvoe/gofakeit/v6"
 	"github.com/firhan200/taskmanagement/data"
 	"github.com/firhan200/taskmanagement/dto"
+	"github.com/firhan200/taskmanagement/repositories"
+	"github.com/firhan200/taskmanagement/services"
 	"github.com/firhan200/taskmanagement/utils"
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"
@@ -41,9 +43,10 @@ func (th *TaskHandler) GetTasks() fiber.Handler {
 		sort := c.Query("sort", "desc")
 		search := c.Query("search", "")
 
-		taskManager := data.NewTaskManager(th.db)
+		repo := repositories.NewTaskRepository(th.db)
+		service := services.NewTaskService(repo)
 
-		tasks := taskManager.GetTasks(
+		tasks, err := service.GetTasksByUserId(
 			uid,
 			cursor,
 			limit,
@@ -52,10 +55,14 @@ func (th *TaskHandler) GetTasks() fiber.Handler {
 			search,
 		)
 
-		//get body parser
-		c.Status(http.StatusOK).JSON(tasks)
+		if err != nil {
+			return c.Status(http.StatusInternalServerError).JSON(fiber.Map{
+				"error": err,
+			})
+		}
 
-		return nil
+		//get body parser
+		return c.Status(http.StatusOK).JSON(tasks)
 	}
 }
 
@@ -79,9 +86,9 @@ func (th *TaskHandler) GetTaskById() fiber.Handler {
 		}
 		id := uint(idInt)
 
-		db := data.NewConnection()
-		taskManager := data.NewTaskManager(db)
-		task, err := taskManager.GetSingleTask(uid, id)
+		repo := repositories.NewTaskRepository(th.db)
+		service := services.NewTaskService(repo)
+		task, err := service.GetByIdAuthorize(uid, id)
 
 		if err != nil {
 			return c.Status(http.StatusInternalServerError).JSON(fiber.Map{
@@ -119,9 +126,9 @@ func (th *TaskHandler) CreateTask() fiber.Handler {
 			})
 		}
 
-		db := data.NewConnection()
-		taskManager := data.NewTaskManager(db)
-		createdId, saveErr := taskManager.Save(
+		repo := repositories.NewTaskRepository(th.db)
+		service := services.NewTaskService(repo)
+		createdId, saveErr := service.Create(
 			uid,
 			createTaskDto.Title,
 			createTaskDto.Description,
@@ -181,9 +188,9 @@ func (th *TaskHandler) UpdateTask() fiber.Handler {
 			})
 		}
 
-		db := data.NewConnection()
-		taskManager := data.NewTaskManager(db)
-		updatedTask, saveErr := taskManager.Update(
+		repo := repositories.NewTaskRepository(th.db)
+		service := services.NewTaskService(repo)
+		updatedTask, saveErr := service.Update(
 			uid,
 			id,
 			updateTaskDto.Title,
@@ -230,9 +237,9 @@ func (th *TaskHandler) DeleteTask() fiber.Handler {
 			return err
 		}
 
-		db := data.NewConnection()
-		taskManager := data.NewTaskManager(db)
-		deleteErr := taskManager.Remove(uid, id)
+		repo := repositories.NewTaskRepository(th.db)
+		service := services.NewTaskService(repo)
+		deleteErr := service.Delete(uid, id)
 
 		if deleteErr != nil {
 			return c.Status(http.StatusInternalServerError).JSON(fiber.Map{
@@ -255,8 +262,8 @@ func (th *TaskHandler) GenerateRandomData() fiber.Handler {
 			return nil
 		}
 
-		db := data.NewConnection()
-		tm := data.NewTaskManager(db)
+		repo := repositories.NewTaskRepository(th.db)
+		service := services.NewTaskService(repo)
 
 		tasks := []*data.Task{}
 		taskchan := make(chan *data.Task)
@@ -269,7 +276,7 @@ func (th *TaskHandler) GenerateRandomData() fiber.Handler {
 				go func() {
 					defer wg.Done()
 
-					task, err := tm.Save(
+					task, err := service.Create(
 						uid,
 						gofakeit.Sentence(gofakeit.IntRange(5, 10)),
 						gofakeit.Sentence(gofakeit.IntRange(10, 50)),
