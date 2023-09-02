@@ -30,10 +30,9 @@ func NewConnection() *gorm.DB {
 	user := os.Getenv("DB_USER")
 	pass := os.Getenv("DB_PASS")
 	dbname := os.Getenv("DB_NAME")
-	port := os.Getenv("DB_PORT")
-	timezone := os.Getenv("DB_TIMEZONE")
+	port := os.Getenv("DATABASE_PORT")
 
-	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s TimeZone=%s", host, user, pass, dbname, port, timezone)
+	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s", host, user, pass, dbname, port)
 	log.Print("Connecting to database...")
 	//dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=True&loc=Local", user, pass, host, port, dbname)
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{

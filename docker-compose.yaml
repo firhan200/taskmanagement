@@ -40,11 +40,11 @@ services:
       - POSTGRES_USER=${DB_USER}
       - POSTGRES_PASSWORD=${DB_PASS}
       - POSTGRES_DB=${DB_NAME}
-      - POSTGRES_PORT=${DB_PORT}
+      - POSTGRES_PORT=${DATABASE_PORT}
       - DATABASE_HOST=${DB_HOST}
-      - PGPORT=${DB_PORT}
+      - PGPORT=${DATABASE_PORT}
     ports:
-      - ${DB_PORT}:${DB_PORT}
+      - ${DATABASE_PORT}:${DATABASE_PORT}
     volumes:
       - postgres-data:/var/lib/postgresql/data
   # taskmanagement_db:
