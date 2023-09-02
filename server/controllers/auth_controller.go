@@ -31,13 +31,6 @@ func (lh *LoginHandler) Login() fiber.Handler {
 			})
 		}
 
-		//validate
-		if loginDto.EmailAddress == "" || loginDto.Password == "" {
-			return c.Status(http.StatusBadRequest).JSON(fiber.Map{
-				"error": "Email Address or Password cannot be empty",
-			})
-		}
-
 		repo := repositories.NewUserRepository(lh.db)
 		service := services.NewUserService(repo)
 		u, err := service.Login(loginDto.EmailAddress, loginDto.Password)

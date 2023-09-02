@@ -8,6 +8,7 @@ import (
 	"github.com/joho/godotenv"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 )
 
 var (
@@ -36,7 +37,7 @@ func NewConnection() *gorm.DB {
 	log.Print("Connecting to database...")
 	//dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=True&loc=Local", user, pass, host, port, dbname)
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
-		//Logger: logger.Default.LogMode(logger.Info),
+		Logger: logger.Default.LogMode(logger.Info),
 	})
 	if err != nil {
 		log.Fatalf("Failed to connect: %s", err.Error())

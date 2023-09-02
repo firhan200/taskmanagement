@@ -9,20 +9,20 @@ import (
 	"gorm.io/gorm"
 )
 
-type IUserRepository interface {
+type IUserDB interface {
 	Create(value interface{}) (tx *gorm.DB)
 	Find(dest interface{}, conds ...interface{}) (tx *gorm.DB)
 }
 
 type UserRepository struct {
-	db IUserRepository
+	db IUserDB
 }
 
 var (
 	userRepository *UserRepository
 )
 
-func NewUserRepository(db IUserRepository) *UserRepository {
+func NewUserRepository(db IUserDB) *UserRepository {
 	if userRepository != nil {
 		return userRepository
 	}
@@ -44,7 +44,7 @@ func (um *UserRepository) GetByEmailAddressAndPassword(
 		return nil, err
 	}
 
-	var u data.User
+	var u *data.User
 
 	res := um.db.Find(&u, &data.User{
 		EmailAddress: emailAddress,
@@ -59,7 +59,7 @@ func (um *UserRepository) GetByEmailAddressAndPassword(
 		return nil, errors.New("user not found")
 	}
 
-	return &u, nil
+	return u, nil
 }
 
 func (um *UserRepository) FindByEmail(
@@ -83,10 +83,16 @@ func (um *UserRepository) Insert(
 	emailAddress string,
 	password string,
 ) (*data.UserSecure, error) {
+	//encrypt password
+	hashed, err := utils.HashPassword(password)
+	if err != nil {
+		return nil, err
+	}
+
 	user := &data.User{
 		FullName:     fullName,
 		EmailAddress: emailAddress,
-		Password:     password,
+		Password:     hashed,
 	}
 
 	res := um.db.Create(&user)

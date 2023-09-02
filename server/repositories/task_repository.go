@@ -122,7 +122,7 @@ func (tr *TaskRepository) GetNextCursor(
 		Limit(limit).
 		Find(&nextTask, filterCondition(orderBy, sort, keyword, false), nextTaskCursor, searchRule(keyword))
 	if nextTask.ID == 0 {
-		return ""
+		return nil
 	}
 
 	return getTaskCursorColumnByOrder(&nextTask, orderBy)

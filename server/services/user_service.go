@@ -5,18 +5,23 @@ import (
 	"log"
 
 	"github.com/firhan200/taskmanagement/data"
-	"github.com/firhan200/taskmanagement/repositories"
 )
 
+type IUserRepository interface {
+	GetByEmailAddressAndPassword(emailAddress string, password string) (*data.User, error)
+	FindByEmail(emailAddress string) (*data.User, error)
+	Insert(name string, emailAddress string, password string) (*data.UserSecure, error)
+}
+
 type UserService struct {
-	ur *repositories.UserRepository
+	ur IUserRepository
 }
 
 var (
 	userService *UserService
 )
 
-func NewUserService(ur *repositories.UserRepository) *UserService {
+func NewUserService(ur IUserRepository) *UserService {
 	if userService != nil {
 		return userService
 	}
@@ -32,10 +37,18 @@ func (us *UserService) Login(
 	email string,
 	pass string,
 ) (*data.User, error) {
+	if email == "" {
+		return nil, errors.New("email cannot be empty")
+	}
+
+	if pass == "" {
+		return nil, errors.New("password cannot be empty")
+	}
+
 	res, err := us.ur.GetByEmailAddressAndPassword(email, pass)
 
 	if err != nil {
-		return nil, err
+		return res, err
 	}
 
 	return res, nil
@@ -46,6 +59,18 @@ func (us *UserService) Register(
 	email string,
 	pass string,
 ) (*data.UserSecure, error) {
+	if name == "" {
+		return nil, errors.New("name cannot be empty")
+	}
+
+	if email == "" {
+		return nil, errors.New("email cannot be empty")
+	}
+
+	if pass == "" {
+		return nil, errors.New("pass cannot be empty")
+	}
+
 	_, err := us.ur.FindByEmail(email)
 	if err == nil {
 		return nil, errors.New("email already taken")
