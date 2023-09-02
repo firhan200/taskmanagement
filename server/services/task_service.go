@@ -6,11 +6,53 @@ import (
 	"time"
 
 	"github.com/firhan200/taskmanagement/data"
-	"github.com/firhan200/taskmanagement/repositories"
 )
 
+type ITaskRepository interface {
+	GetAll(
+		uid uint,
+		cursor interface{},
+		limit int,
+		orderBy string,
+		sort string,
+		keyword string,
+	) ([]data.Task, error)
+	GetNextCursor(
+		uid uint,
+		lastTask *data.Task,
+		limit int,
+		orderBy string,
+		sort string,
+		keyword string,
+	) interface{}
+	GetTotalByUserId(
+		uid uint,
+		keyword string,
+	) (int, error)
+	FindById(
+		id uint,
+	) (*data.Task, error)
+	Insert(
+		uid uint,
+		title string,
+		desc string,
+		dueDate time.Time,
+	) (*data.Task, error)
+	Update(
+		uid uint,
+		id uint,
+		title string,
+		description string,
+		dueDate time.Time,
+	) (*data.Task, error)
+	Remove(
+		uid uint,
+		id uint,
+	) error
+}
+
 type TaskService struct {
-	tr *repositories.TaskRepository
+	tr ITaskRepository
 }
 
 type Tasks struct {
@@ -28,7 +70,7 @@ var (
 	taskService *TaskService
 )
 
-func NewTaskService(tr *repositories.TaskRepository) *TaskService {
+func NewTaskService(tr ITaskRepository) *TaskService {
 	if taskService != nil {
 		return taskService
 	}
