@@ -1,8 +1,6 @@
 import { memo } from "react"
 
 const SearchResult = memo(function SearchResult({ keyword, total }: { keyword: string, total: number }){
-    console.log("search result rendered", keyword, total)
-
     if(keyword === ""){
         return
     }
