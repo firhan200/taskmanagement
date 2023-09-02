@@ -55,7 +55,7 @@ func (um *UserRepository) GetByEmailAddressAndPassword(
 		return nil, res.Error
 	}
 
-	if u.EmailAddress == "" {
+	if res.RowsAffected < 1 {
 		return nil, errors.New("user not found")
 	}
 
@@ -67,11 +67,11 @@ func (um *UserRepository) FindByEmail(
 ) (*data.User, error) {
 	var existedUser *data.User
 
-	um.db.Find(&existedUser, &data.User{
+	res := um.db.Find(&existedUser, &data.User{
 		EmailAddress: emailAddress,
 	})
 
-	if existedUser.ID == 0 {
+	if res.RowsAffected < 1 {
 		return nil, errors.New("user not found")
 	}
 
