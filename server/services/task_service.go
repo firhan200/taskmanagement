@@ -13,6 +13,17 @@ type TaskService struct {
 	tr *repositories.TaskRepository
 }
 
+type Tasks struct {
+	Data       []data.Task
+	Cursor     interface{}
+	Limit      int
+	OrderBy    string
+	Sort       string
+	Search     string
+	Total      int
+	NextCursor interface{}
+}
+
 var (
 	taskService *TaskService
 )
@@ -36,8 +47,8 @@ func (ts *TaskService) GetTasksByUserId(
 	orderBy string,
 	sort string,
 	search string,
-) (*data.Tasks, error) {
-	tasks := &data.Tasks{
+) (*Tasks, error) {
+	tasks := &Tasks{
 		Data:    []data.Task{},
 		Cursor:  cursor,
 		Limit:   limit,
