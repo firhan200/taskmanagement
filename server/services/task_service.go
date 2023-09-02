@@ -112,19 +112,21 @@ func (ts *TaskService) GetTasksByUserId(
 	}
 	tasks.Data = res
 
-	//set next cursor
-	if len(res) > 0 {
-		lastTask := res[len(res)-1]
-		nc := ts.tr.GetNextCursor(
-			uid,
-			&lastTask,
-			limit,
-			orderBy,
-			sort,
-			search,
-		)
-		tasks.NextCursor = nc
+	if len(res) < 1 {
+		return tasks, errors.New("no more data")
 	}
+
+	//set next cursor
+	lastTask := res[len(res)-1]
+	nc := ts.tr.GetNextCursor(
+		uid,
+		&lastTask,
+		limit,
+		orderBy,
+		sort,
+		search,
+	)
+	tasks.NextCursor = nc
 
 	//get total
 	total, err := ts.tr.GetTotalByUserId(uid, search)
