@@ -103,3 +103,47 @@ func TestUserRepository_FindByEmail_Found(t *testing.T) {
 	_, err := ur.FindByEmail("email")
 	assert.NoError(t, err)
 }
+
+func TestUserRepository_Insert_Failed(t *testing.T) {
+	m := new(MockUserDB)
+	ur := &UserRepository{
+		db: m,
+	}
+
+	m.On("Create", mock.Anything).Return(&gorm.DB{
+		Error: errors.New("internal server error"),
+	})
+
+	_, err := ur.Insert("name", "valid@email.com", "password")
+	assert.Error(t, err)
+}
+
+func TestUserRepository_Insert_Failed_NoAffectedRows(t *testing.T) {
+	m := new(MockUserDB)
+	ur := &UserRepository{
+		db: m,
+	}
+
+	m.On("Create", mock.Anything).Return(&gorm.DB{
+		Error:        nil,
+		RowsAffected: 0,
+	})
+
+	_, err := ur.Insert("name", "valid@email.com", "password")
+	assert.Error(t, err)
+}
+
+func TestUserRepository_Insert_Failed_Success(t *testing.T) {
+	m := new(MockUserDB)
+	ur := &UserRepository{
+		db: m,
+	}
+
+	m.On("Create", mock.Anything).Return(&gorm.DB{
+		Error:        nil,
+		RowsAffected: 1,
+	})
+
+	_, err := ur.Insert("name", "valid@email.com", "password")
+	assert.NoError(t, err)
+}
