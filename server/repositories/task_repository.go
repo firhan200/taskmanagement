@@ -224,7 +224,7 @@ func (tm *TaskRepository) Update(
 
 	//check if task exist
 	res := tm.db.First(&task, id)
-	if res.RowsAffected < 0 {
+	if res.RowsAffected == 0 {
 		return nil, errors.New("task not found")
 	}
 
@@ -258,7 +258,7 @@ func (tm *TaskRepository) Remove(
 
 	//check if task exist
 	res := tm.db.First(&task, id)
-	if res.RowsAffected < 0 {
+	if res.RowsAffected == 0 {
 		return errors.New("task not found")
 	}
 

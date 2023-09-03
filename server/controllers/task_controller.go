@@ -243,7 +243,7 @@ func (th *TaskHandler) DeleteTask() fiber.Handler {
 
 		if deleteErr != nil {
 			return c.Status(http.StatusInternalServerError).JSON(fiber.Map{
-				"error": deleteErr,
+				"error": deleteErr.Error(),
 			})
 		}
 
