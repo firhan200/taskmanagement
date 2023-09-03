@@ -11,7 +11,7 @@ import (
 	"gorm.io/gorm"
 )
 
-type ITaskRepository interface {
+type ITaskDB interface {
 	Create(value interface{}) (tx *gorm.DB)
 	First(dest interface{}, conds ...interface{}) (tx *gorm.DB)
 	Save(value interface{}) (tx *gorm.DB)
@@ -24,14 +24,14 @@ type ITaskRepository interface {
 }
 
 type TaskRepository struct {
-	db ITaskRepository
+	db ITaskDB
 }
 
 var (
 	taskRepository *TaskRepository
 )
 
-func NewTaskRepository(db *gorm.DB) *TaskRepository {
+func NewTaskRepository(db ITaskDB) *TaskRepository {
 	if taskRepository != nil {
 		return taskRepository
 	}
