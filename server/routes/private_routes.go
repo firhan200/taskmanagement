@@ -4,11 +4,10 @@ import (
 	"github.com/firhan200/taskmanagement/controllers"
 	"github.com/firhan200/taskmanagement/middlewares"
 	"github.com/gofiber/fiber/v2"
-	"gorm.io/gorm"
 )
 
-func PrivateRoutes(app *fiber.App, db *gorm.DB) {
-	taskHandler := controllers.NewTaskHandler(db)
+func PrivateRoutes(app *fiber.App) {
+	taskHandler := controllers.NewTaskHandler()
 
 	tasks := app.Group("/tasks", middlewares.JwtAuthMiddleware)
 	tasks.Get("/", taskHandler.GetTasks())

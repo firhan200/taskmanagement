@@ -208,7 +208,15 @@ func (tm *TaskRepository) Insert(
 	}
 	res := tm.db.Create(createdTask)
 
-	return createdTask, res.Error
+	if res.Error != nil {
+		return nil, res.Error
+	}
+
+	if res.RowsAffected == 0 {
+		return nil, errors.New("no rows affected")
+	}
+
+	return createdTask, nil
 }
 
 func (tm *TaskRepository) Update(
@@ -272,7 +280,14 @@ func (tm *TaskRepository) Remove(
 	}
 
 	//update
-	tm.db.Delete(&task)
+	delRes := tm.db.Delete(&task)
+	if delRes.Error != nil {
+		return delRes.Error
+	}
 
-	return res.Error
+	if delRes.RowsAffected == 0 {
+		return errors.New("no row affected")
+	}
+
+	return nil
 }

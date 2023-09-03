@@ -27,8 +27,8 @@ func main() {
 		AllowMethods:     "GET,POST,HEAD,PUT,DELETE,PATCH,OPTIONS",
 	}))
 
-	routes.PrivateRoutes(app, db)
-	routes.PublicRoutes(app, db)
+	routes.PrivateRoutes(app)
+	routes.PublicRoutes(app)
 
 	app.Listen(":8000")
 }

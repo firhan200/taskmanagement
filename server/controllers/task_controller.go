@@ -13,7 +13,6 @@ import (
 	"github.com/firhan200/taskmanagement/services"
 	"github.com/firhan200/taskmanagement/utils"
 	"github.com/gofiber/fiber/v2"
-	"gorm.io/gorm"
 )
 
 type ITaskService interface {
@@ -49,16 +48,15 @@ type ITaskService interface {
 }
 
 type TaskHandler struct {
-	db          *gorm.DB
 	taskService ITaskService
 }
 
-func NewTaskHandler(db *gorm.DB) *TaskHandler {
+func NewTaskHandler() *TaskHandler {
+	db := data.GetConnection()
 	repo := repositories.NewTaskRepository(db)
 	taskService := services.NewTaskService(repo)
 
 	return &TaskHandler{
-		db:          db,
 		taskService: taskService,
 	}
 }
@@ -288,9 +286,6 @@ func (th *TaskHandler) GenerateRandomData() fiber.Handler {
 			return nil
 		}
 
-		repo := repositories.NewTaskRepository(th.db)
-		service := services.NewTaskService(repo)
-
 		tasks := []*data.Task{}
 		taskchan := make(chan *data.Task)
 
@@ -302,7 +297,7 @@ func (th *TaskHandler) GenerateRandomData() fiber.Handler {
 				go func() {
 					defer wg.Done()
 
-					task, err := service.Create(
+					task, err := th.taskService.Create(
 						uid,
 						gofakeit.Sentence(gofakeit.IntRange(5, 10)),
 						gofakeit.Sentence(gofakeit.IntRange(10, 50)),

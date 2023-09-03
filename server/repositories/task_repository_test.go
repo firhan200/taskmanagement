@@ -211,7 +211,9 @@ func TestTaskRepository_Insert_Success(t *testing.T) {
 		db: m,
 	}
 
-	m.On("Create", mock.Anything).Return(&gorm.DB{})
+	m.On("Create", mock.Anything).Return(&gorm.DB{
+		RowsAffected: 1,
+	})
 
 	task, err := tr.Insert(1, "title", "desc", time.Now())
 	log.Println(task)
@@ -319,8 +321,26 @@ func TestTaskRepository_Delete_Success(t *testing.T) {
 
 	rows := sqlmock.NewRows([]string{"id", "user_id"}).AddRow(1, 2)
 	mock.ExpectQuery(`SELECT`).WillReturnRows(rows)
+	mock.ExpectBegin()
 	mock.ExpectExec(`UPDATE`).WillReturnResult(sqlmock.NewResult(1, 1))
+	mock.ExpectCommit()
 
 	err := tr.Remove(2, 3)
 	assert.NoError(t, err)
+}
+
+func BenchmarkInsert(b *testing.B) {
+	m := new(MockTaskDB)
+	tr := &TaskRepository{
+		db: m,
+	}
+
+	m.On("Create", mock.Anything).Return(&gorm.DB{
+		Error:        nil,
+		RowsAffected: 1,
+	})
+
+	for i := 0; i < b.N; i++ {
+		tr.Insert(1, "title", "desc", time.Now())
+	}
 }

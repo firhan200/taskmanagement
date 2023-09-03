@@ -9,7 +9,6 @@ import (
 	"github.com/firhan200/taskmanagement/services"
 	"github.com/firhan200/taskmanagement/utils"
 	"github.com/gofiber/fiber/v2"
-	"gorm.io/gorm"
 )
 
 type IUserService interface {
@@ -18,16 +17,15 @@ type IUserService interface {
 }
 
 type LoginHandler struct {
-	db          *gorm.DB
 	userService IUserService
 }
 
-func NewLoginHandler(db *gorm.DB) *LoginHandler {
+func NewLoginHandler() *LoginHandler {
+	db := data.GetConnection()
 	repo := repositories.NewUserRepository(db)
 	service := services.NewUserService(repo)
 
 	return &LoginHandler{
-		db:          db,
 		userService: service,
 	}
 }

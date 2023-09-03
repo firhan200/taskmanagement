@@ -35,7 +35,7 @@ func NewConnection() *gorm.DB {
 	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s", host, user, pass, dbname, port)
 	log.Print("Connecting to database...")
 	//dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=True&loc=Local", user, pass, host, port, dbname)
-	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
+	db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{
 		Logger: logger.Default.LogMode(logger.Info),
 	})
 	if err != nil {
@@ -44,6 +44,10 @@ func NewConnection() *gorm.DB {
 	}
 	log.Print("Database connected!")
 
+	return db
+}
+
+func GetConnection() *gorm.DB {
 	return db
 }
 
