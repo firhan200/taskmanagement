@@ -16,13 +16,50 @@ import (
 	"gorm.io/gorm"
 )
 
+type ITaskService interface {
+	GetTasksByUserId(
+		uid uint,
+		cursor interface{},
+		limit int,
+		orderBy string,
+		sort string,
+		search string,
+	) (*services.Tasks, error)
+	GetByIdAuthorize(
+		uid uint,
+		id uint,
+	) (*data.Task, error)
+	Create(
+		uid uint,
+		title string,
+		description string,
+		dueDate time.Time,
+	) (*data.Task, error)
+	Update(
+		uid uint,
+		id uint,
+		title string,
+		description string,
+		dueDate time.Time,
+	) (*data.Task, error)
+	Delete(
+		uid uint,
+		id uint,
+	) error
+}
+
 type TaskHandler struct {
-	db *gorm.DB
+	db          *gorm.DB
+	taskService ITaskService
 }
 
 func NewTaskHandler(db *gorm.DB) *TaskHandler {
+	repo := repositories.NewTaskRepository(db)
+	taskService := services.NewTaskService(repo)
+
 	return &TaskHandler{
-		db: db,
+		db:          db,
+		taskService: taskService,
 	}
 }
 
@@ -43,10 +80,7 @@ func (th *TaskHandler) GetTasks() fiber.Handler {
 		sort := c.Query("sort", "desc")
 		search := c.Query("search", "")
 
-		repo := repositories.NewTaskRepository(th.db)
-		service := services.NewTaskService(repo)
-
-		tasks, err := service.GetTasksByUserId(
+		tasks, err := th.taskService.GetTasksByUserId(
 			uid,
 			cursor,
 			limit,
@@ -86,9 +120,7 @@ func (th *TaskHandler) GetTaskById() fiber.Handler {
 		}
 		id := uint(idInt)
 
-		repo := repositories.NewTaskRepository(th.db)
-		service := services.NewTaskService(repo)
-		task, err := service.GetByIdAuthorize(uid, id)
+		task, err := th.taskService.GetByIdAuthorize(uid, id)
 
 		if err != nil {
 			return c.Status(http.StatusInternalServerError).JSON(fiber.Map{
@@ -126,9 +158,7 @@ func (th *TaskHandler) CreateTask() fiber.Handler {
 			})
 		}
 
-		repo := repositories.NewTaskRepository(th.db)
-		service := services.NewTaskService(repo)
-		createdId, saveErr := service.Create(
+		createdId, saveErr := th.taskService.Create(
 			uid,
 			createTaskDto.Title,
 			createTaskDto.Description,
@@ -188,9 +218,7 @@ func (th *TaskHandler) UpdateTask() fiber.Handler {
 			})
 		}
 
-		repo := repositories.NewTaskRepository(th.db)
-		service := services.NewTaskService(repo)
-		updatedTask, saveErr := service.Update(
+		updatedTask, saveErr := th.taskService.Update(
 			uid,
 			id,
 			updateTaskDto.Title,
@@ -237,9 +265,7 @@ func (th *TaskHandler) DeleteTask() fiber.Handler {
 			return err
 		}
 
-		repo := repositories.NewTaskRepository(th.db)
-		service := services.NewTaskService(repo)
-		deleteErr := service.Delete(uid, id)
+		deleteErr := th.taskService.Delete(uid, id)
 
 		if deleteErr != nil {
 			return c.Status(http.StatusInternalServerError).JSON(fiber.Map{

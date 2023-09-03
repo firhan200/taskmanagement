@@ -3,6 +3,7 @@ package controllers
 import (
 	"net/http"
 
+	"github.com/firhan200/taskmanagement/data"
 	"github.com/firhan200/taskmanagement/dto"
 	"github.com/firhan200/taskmanagement/repositories"
 	"github.com/firhan200/taskmanagement/services"
@@ -11,13 +12,23 @@ import (
 	"gorm.io/gorm"
 )
 
+type IUserService interface {
+	Login(email string, pass string) (*data.User, error)
+	Register(name string, email string, pass string) (*data.UserSecure, error)
+}
+
 type LoginHandler struct {
-	db *gorm.DB
+	db          *gorm.DB
+	userService IUserService
 }
 
 func NewLoginHandler(db *gorm.DB) *LoginHandler {
+	repo := repositories.NewUserRepository(db)
+	service := services.NewUserService(repo)
+
 	return &LoginHandler{
-		db: db,
+		db:          db,
+		userService: service,
 	}
 }
 
@@ -31,9 +42,7 @@ func (lh *LoginHandler) Login() fiber.Handler {
 			})
 		}
 
-		repo := repositories.NewUserRepository(lh.db)
-		service := services.NewUserService(repo)
-		u, err := service.Login(loginDto.EmailAddress, loginDto.Password)
+		u, err := lh.userService.Login(loginDto.EmailAddress, loginDto.Password)
 
 		if err != nil {
 			return c.Status(http.StatusBadRequest).JSON(fiber.Map{
@@ -71,11 +80,8 @@ func (lh *LoginHandler) Register() fiber.Handler {
 			})
 		}
 
-		repo := repositories.NewUserRepository(lh.db)
-		service := services.NewUserService(repo)
-
 		//save and check if error
-		u, err := service.Register(
+		u, err := lh.userService.Register(
 			registerDto.FullName,
 			registerDto.EmailAddress,
 			registerDto.Password,
