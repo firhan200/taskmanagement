@@ -149,13 +149,6 @@ func (th *TaskHandler) CreateTask() fiber.Handler {
 			})
 		}
 
-		//validate
-		if createTaskDto.Title == "" || createTaskDto.Description == "" {
-			return c.Status(http.StatusBadRequest).JSON(fiber.Map{
-				"error": "Title, Description or Due Date cannot be empty",
-			})
-		}
-
 		createdId, saveErr := th.taskService.Create(
 			uid,
 			createTaskDto.Title,
@@ -209,13 +202,6 @@ func (th *TaskHandler) UpdateTask() fiber.Handler {
 			})
 		}
 
-		//validate
-		if updateTaskDto.Title == "" || updateTaskDto.Description == "" {
-			return c.Status(http.StatusBadRequest).JSON(fiber.Map{
-				"error": "Title, Description or Due Date cannot be empty",
-			})
-		}
-
 		updatedTask, saveErr := th.taskService.Update(
 			uid,
 			id,
@@ -225,8 +211,8 @@ func (th *TaskHandler) UpdateTask() fiber.Handler {
 		)
 
 		if saveErr != nil {
-			return c.Status(http.StatusOK).JSON(fiber.Map{
-				"task": updatedTask,
+			return c.Status(http.StatusInternalServerError).JSON(fiber.Map{
+				"error": saveErr.Error(),
 			})
 		}
 

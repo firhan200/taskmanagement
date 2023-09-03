@@ -1,8 +1,10 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { AxiosError } from "axios";
 import { useEffect, useState } from "react";
 import DatePicker from "react-date-picker";
 import TimePicker from "react-time-picker";
 import Button from "src/atoms/Button/Button";
+import CharCounter from "src/atoms/CharCounter/CharCounter";
 import Loading from "src/atoms/Loading/Loading";
 import Typography from "src/atoms/Typography/Typography";
 import { dateStringToDateAndTime, dateToString } from "src/helpers/date";
@@ -11,13 +13,16 @@ import useTask from "src/hooks/useTask";
 import FormAreaControl from "src/molecules/FormAreaControl/FormAreaControl";
 import FormControl from "src/molecules/FormControl/FormControl";
 import FormControlWrapper from "src/molecules/FormControlWrapper/FormControlWrapper";
-import { deleteTask, getTaskById, updateTask } from "src/services/taskService";
+import { UpdateTaskErrorResponse, deleteTask, getTaskById, updateTask } from "src/services/taskService";
 
 export type ValuePiece = Date | null;
 
 export type Value = ValuePiece | [ValuePiece, ValuePiece];
 
 export default function EditTask() {
+    const titleMax = 100
+    const descMax = 200
+
     const { editId, edit } = useTask()
     const { show } = useModal()
     const queryClient = useQueryClient()
@@ -115,6 +120,10 @@ export default function EditTask() {
             edit(null)
             //show success modal
             show("Edit success", null)
+        },
+        onError: (err: AxiosError) => {
+            const data = err.response?.data as UpdateTaskErrorResponse
+            alert(`Failed to Edit Task: ${data.error}`)
         }
     })
 
@@ -144,7 +153,8 @@ export default function EditTask() {
                     loadingData ? <LoadingState /> : (
                         <>
                             <Typography size="md">{ title }</Typography>
-                            <FormControl disabled={isLoading} title="Name" value={title} onChange={e => setTitle(e.target.value)} required />
+                            <FormControl disabled={isLoading} title="Name" value={title} onChange={e => setTitle(e.target.value)} maxLength={titleMax} required />
+                            <CharCounter current={title.length} max={titleMax}/>
                             <FormControlWrapper title="Due Date">
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
@@ -155,7 +165,8 @@ export default function EditTask() {
                                     </div>
                                 </div>
                             </FormControlWrapper>
-                            <FormAreaControl disabled={isLoading} title="Description" value={description} onChange={e => setDescription(e.target.value)} required />
+                            <FormAreaControl disabled={isLoading} title="Description" value={description} onChange={e => setDescription(e.target.value)} maxLength={descMax} required />
+                            <CharCounter current={description.length} max={descMax}/>
                             {
                                 isLoading ? (
                                     <Loading />

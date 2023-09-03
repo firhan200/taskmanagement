@@ -61,32 +61,33 @@ export const getTasks = async (
   return data;
 };
 
+export type CreateTaskErrorResponse = {
+  error: string
+}
+
 export const createTask = async (
   title: string,
   description: string,
   dueDate: string
 ) => {
-  try {
-    const res = await axios.post(
-      `${apiUrl}tasks`,
-      {
-        title: title,
-        description: description,
-        dueDate: dueDate,
+  const res = await axios.post(
+    `${apiUrl}tasks`,
+    {
+      title: title,
+      description: description,
+      dueDate: dueDate,
+    },
+    {
+      headers: {
+        ...addAuthorizationHeader(),
       },
-      {
-        headers: {
-          ...addAuthorizationHeader(),
-        },
-      }
-    );
+    }
+  );
 
-    const data = res.data;
+  const data = res.data;
 
-    return data;
-  } catch {
-    return null;
-  }
+  return data
+
 };
 
 export const getTaskById = async (id: number): Promise<Task | null> => {
@@ -105,33 +106,33 @@ export const getTaskById = async (id: number): Promise<Task | null> => {
   }
 };
 
+export type UpdateTaskErrorResponse = {
+  error: string
+}
+
 export const updateTask = async (
   id: number,
   title: string,
   description: string,
   dueDate: string
 ) => {
-  try {
-    const res = await axios.patch(
-      `${apiUrl}tasks/${id}`,
-      {
-        title: title,
-        description: description,
-        dueDate: dueDate,
+  const res = await axios.patch(
+    `${apiUrl}tasks/${id}`,
+    {
+      title: title,
+      description: description,
+      dueDate: dueDate,
+    },
+    {
+      headers: {
+        ...addAuthorizationHeader(),
       },
-      {
-        headers: {
-          ...addAuthorizationHeader(),
-        },
-      }
-    );
+    }
+  );
 
-    const data = res.data;
+  const data = res.data;
 
-    return data;
-  } catch {
-    return null;
-  }
+  return data;
 };
 
 type DeleteTaskResponse = {

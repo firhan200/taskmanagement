@@ -3,6 +3,7 @@ package services
 import (
 	"errors"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/firhan200/taskmanagement/data"
@@ -161,6 +162,18 @@ func (ts *TaskService) Create(
 	description string,
 	dueDate time.Time,
 ) (*data.Task, error) {
+	//validate inputs
+	title = strings.TrimSpace(title)
+	description = strings.TrimSpace(description)
+
+	if title == "" {
+		return nil, errors.New("title cannot be empty")
+	}
+
+	if description == "" {
+		return nil, errors.New("description cannot be empty")
+	}
+
 	res, err := ts.tr.Insert(
 		uid,
 		title,
@@ -181,6 +194,18 @@ func (ts *TaskService) Update(
 	description string,
 	dueDate time.Time,
 ) (*data.Task, error) {
+	//validate inputs
+	title = strings.TrimSpace(title)
+	description = strings.TrimSpace(description)
+
+	if title == "" {
+		return nil, errors.New("title cannot be empty")
+	}
+
+	if description == "" {
+		return nil, errors.New("description cannot be empty")
+	}
+
 	res, err := ts.tr.Update(
 		uid,
 		id,
