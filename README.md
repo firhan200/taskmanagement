@@ -1,4 +1,5 @@
 # Task Management Web Application
+![home page screenshots](/screenshots/home.png)
 
 ## Task Management
 
@@ -31,3 +32,34 @@ To get started with this Task Management Web Application, follow these steps:
 - Make sure you have [Docker](https://www.docker.com/) installed on your machine
 - type `make build` to build server, client and database using docker compose
 - then run `make up` to run container or `make up-quite` to run container on the background process
+- open browser on [localhost:3000](http://localhost:3000)
+
+# Deep Dive
+Let's deep dive into the techinal section of this application
+## Application Architecture
+it have 3 separate docker container that connect on the same network
+![application architecture](/screenshots/architecture.png)
+## Database Design
+we have **users** and **tasks** entity that have relationship one to many, 1 user can have many tasks
+![application db design](/screenshots/entities.png)
+## Server Layer
+on the server we separate layers into:
+- **routes**: we separate routes into private and public routes, user that have logged can acces private routes
+- **middlewares**:
+  - **CORS**
+    used for enable client access into the server
+  - **JWT**
+    used to authenticate if jwt on the **Authorization: Bearer {token}** is valid
+- **controllers**: containing fiber function handler for http request
+- **services**: containing business logic
+- **repository**: call gorm functions in here
+![application layer](/screenshots/server_layer.png)
+## Test
+### Unit Test
+we do unit test on repositories and services layer, with result below:
+![unit test](/screenshots/test.png)
+### benchmark
+for handling such as huge request we do bench test on Create Task function on task controller
+![bench test](/screenshots/bench_controller.png)
+
+# Thank You
