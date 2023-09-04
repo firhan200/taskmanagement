@@ -14,9 +14,9 @@ export default function RegisterForm() {
     const { authorize } = useAuth()
     const navigate = useNavigate()
 
-    const [fullName, setFullName] = useState<string>('Testing')
-    const [emailAddress, setEmailAddress] = useState<string>('test@gmail.com')
-    const [password, setPassword] = useState<string>('123456')
+    const [fullName, setFullName] = useState<string>('')
+    const [emailAddress, setEmailAddress] = useState<string>('')
+    const [password, setPassword] = useState<string>('')
     const [error, setError] = useState<string>("")
 
     const { isLoading, mutate } = useMutation({

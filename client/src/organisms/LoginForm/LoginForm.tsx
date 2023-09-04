@@ -14,8 +14,8 @@ export default function LoginForm() {
     const { authorize } = useAuth()
     const navigate = useNavigate()
 
-    const [emailAddress, setEmailAddress] = useState<string>('test@gmail.com')
-    const [password, setPassword] = useState<string>('123456')
+    const [emailAddress, setEmailAddress] = useState<string>('')
+    const [password, setPassword] = useState<string>('')
     const [error, setError] = useState<string>("")
 
     const { isLoading, mutate } = useMutation({
