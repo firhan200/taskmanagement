@@ -33,7 +33,9 @@ To get started with this Task Management Web Application, follow these steps:
 - type `make build` to build server, client and database using docker compose
 - then run `make up` to run container or `make up-quite` to run container on the background process
 - open browser on [localhost:3000](http://localhost:3000)
-
+> - server will run on port 8000
+> - client/reactjs will run on port 3000
+> - postgresdb will run on port 3308 or you can edit it on server [.env](/server/.env) file
 # Deep Dive
 Let's deep dive into the techinal section of this application
 ## Application Architecture
