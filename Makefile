@@ -21,3 +21,9 @@ server-restart:
 
 db-up:
 	docker compose --env-file ./server/.env  -f ./docker-compose.yaml up -d taskmanagement_db
+
+test:
+	docker compose --env-file ./server/.env  -f ./docker-compose.yaml exec server go test ./... -cover
+
+bench:
+	docker compose --env-file ./server/.env  -f ./docker-compose.yaml exec server go test ./... -bench=. -run=TestNothing
